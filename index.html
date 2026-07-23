@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOXL 무한매수법 V4.0</title>
+<style>
+  :root {
+    --bg: #f6f4ef;
+    --bg2: #f1ede4;
+    --card: #ffffff;
+    --card2: #faf8f4;
+    --border: #e2ddd2;
+    --border-soft: #ece7dc;
+    --text: #1c1f26;
+    --dim: #6b7280;
+    --faint: #9aa0ab;
+    --amber: #e8790f;
+    --amber-soft: rgba(232,121,15,.09);
+    --amber-glow: rgba(232,121,15,.30);
+    --cyan: #0f8f82;
+    --cyan-soft: rgba(15,143,130,.09);
+    --red: #d92d4c;
+    --red-soft: rgba(217,45,76,.08);
+    --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Malgun Gothic', sans-serif;
+    --shadow: 0 1px 3px rgba(20,15,5,.06), 0 1px 2px rgba(20,15,5,.04);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--text); padding-bottom: 40px; }
+  ::selection { background: var(--amber-soft); }
+  header { position: sticky; top: 0; z-index: 20; background: linear-gradient(180deg, var(--bg2), var(--bg) 90%); padding: 22px 20px 14px; border-bottom: 1px solid var(--border-soft); }
+  .header-row { display: flex; align-items: flex-start; justify-content: space-between; }
+  .brand { display: flex; align-items: baseline; gap: 8px; }
+  .brand .infinity { color: var(--amber); font-size: 22px; font-family: var(--mono); }
+  .brand h1 { font-size: 19px; margin: 0; font-weight: 700; letter-spacing: -.2px; }
+  .brand .ticker { font-family: var(--mono); color: var(--dim); font-size: 12px; margin-top: 3px; letter-spacing: .5px; }
+  .gear-btn { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border); background: var(--card); color: var(--dim); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: border-color .15s, color .15s; }
+  .gear-btn:hover { border-color: var(--amber); color: var(--amber); }
+  .trace-line { margin-top: 14px; height: 1px; background: repeating-linear-gradient(90deg, var(--border) 0 6px, transparent 6px 10px); }
+  main { padding: 16px 16px 8px; max-width: 480px; margin: 0 auto; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .card h2 { font-size: 12px; margin: 0 0 14px; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; display: flex; align-items: center; gap: 6px; }
+  .card h2 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+  .card h2.cyan .dot { background: var(--cyan); }
+  .card h2.red .dot { background: var(--red); }
+  label.field { display: block; font-size: 12.5px; color: var(--dim); margin-top: 14px; }
+  label.field:first-child { margin-top: 0; }
+  input[type=number], input[type=text], select { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg2); color: var(--text); font-size: 15px; margin-top: 6px; font-family: var(--mono); transition: border-color .15s; }
+  input:focus, select:focus { outline: none; border-color: var(--amber); }
+  select { font-family: var(--sans); appearance: none; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; }
+  .grid5 label { font-size: 10px; text-align: center; color: var(--faint); margin: 0; font-family: var(--mono); }
+  .grid5 input { padding: 8px 4px; font-size: 12.5px; text-align: center; }
+  .toggle-row { display: flex; gap: 8px; margin-top: 8px; }
+  .toggle-row div { flex: 1; text-align: center; padding: 12px; border-radius: 9px; border: 1px solid var(--border); font-weight: 700; font-size: 13.5px; color: var(--dim); background: var(--bg2); cursor: pointer; transition: all .15s; }
+  .toggle-row div.active.red { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+  .toggle-row div.active.cyan { background: var(--cyan-soft); border-color: var(--cyan); color: var(--cyan); }
+  .btn { width: 100%; padding: 13px; border: none; border-radius: 10px; font-size: 14.5px; font-weight: 700; margin-top: 14px; cursor: pointer; font-family: var(--sans); transition: filter .15s, transform .05s; }
+  .btn:active { transform: scale(.98); }
+  .btn.amber { background: var(--amber); color: #12100a; }
+  .btn.cyan { background: var(--cyan); color: #08201d; }
+  .btn.red { background: var(--red); color: #200; }
+  .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--dim); }
+  .btn.ghost:hover { border-color: var(--dim); color: var(--text); }
+  .btn:hover { filter: brightness(1.08); }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { margin-top: 8px; }
+  .row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-soft); font-size: 13.5px; }
+  .row:last-child { border-bottom: none; }
+  .row .label { color: var(--dim); }
+  .row .val { font-family: var(--mono); font-weight: 600; }
+  .banner { border-radius: 9px; padding: 11px 13px; font-size: 12px; margin-top: 12px; line-height: 1.55; }
+  .banner.info { background: var(--cyan-soft); color: var(--cyan); border: 1px solid rgba(69,214,196,.25); }
+  .banner.warn { background: var(--amber-soft); color: var(--amber); border: 1px solid rgba(255,171,46,.25); }
+  .banner.danger { background: var(--red-soft); color: var(--red); border: 1px solid rgba(255,93,117,.25); }
+  .t-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .t-label { font-size: 12px; color: var(--dim); text-transform: uppercase; letter-spacing: .6px; }
+  .t-big { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--amber); }
+  .t-segments { display: flex; gap: 2px; margin-top: 14px; }
+  .t-seg { flex: 1; height: 20px; border-radius: 2px; background: #ede8dd; border: 1px solid var(--border); }
+  .t-seg.filled { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 8px var(--amber-glow); }
+  .t-seg.current { background: var(--amber); opacity: .55; }
+  .t-labels { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--faint); margin-top: 8px; font-family: var(--mono); }
+  .mode-tabs { display: flex; gap: 4px; margin: 18px 0 12px; border-bottom: 1px solid var(--border-soft); }
+  .mode-tab { flex: 1; text-align: center; padding: 10px 2px; font-size: 12.5px; font-weight: 600; color: var(--faint); cursor: pointer; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s; }
+  .mode-tab.active-normal { color: var(--amber); border-color: var(--amber); }
+  .mode-tab.active-reverse { color: var(--red); border-color: var(--red); }
+  .mode-tab.active-chart { color: var(--cyan); border-color: var(--cyan); }
+  .mode-tab.active-profit { color: #8ef29a; border-color: #8ef29a; }
+  .mode-page { display: none; }
+  .mode-page.active { display: block; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; font-family: var(--mono); }
+  th, td { text-align: center; padding: 8px 4px; border-bottom: 1px solid var(--border-soft); }
+  th { color: var(--faint); font-weight: 500; font-family: var(--sans); font-size: 10.5px; text-transform: uppercase; }
+  td:first-child { color: var(--dim); font-family: var(--sans); font-size: 11px; text-align: left; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; text-align: center; }
+  .stat-box { background: var(--bg2); border: 1px solid var(--border-soft); border-radius: 9px; padding: 12px 4px; }
+  .stat-box .n { font-size: 17px; font-weight: 700; font-family: var(--mono); }
+  .stat-box .l { font-size: 10px; color: var(--faint); margin-top: 3px; text-transform: uppercase; letter-spacing: .4px; }
+  .cycle-item { padding: 11px 0; border-bottom: 1px solid var(--border-soft); font-size: 12.5px; }
+  .cycle-item:last-child { border-bottom: none; }
+  .cycle-top { display: flex; justify-content: space-between; font-weight: 700; font-family: var(--mono); }
+  .cycle-sub { color: var(--dim); font-size: 11.5px; margin-top: 4px; display: flex; justify-content: space-between; }
+  .del-link { color: var(--red); font-size: 11px; background: none; border: none; cursor: pointer; float: right; font-family: var(--sans); }
+  .empty { text-align: center; color: var(--faint); font-size: 12.5px; padding: 22px 0; }
+  .preview-card { border-color: var(--amber); background: linear-gradient(180deg, var(--amber-soft), var(--card) 60%); }
+  .diff-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-soft); font-size: 13.5px; font-family: var(--mono); }
+  .diff-row:last-child { border-bottom: none; }
+  .diff-arrow { color: var(--faint); margin: 0 6px; }
+  .diff-new { color: var(--amber); font-weight: 700; }
+  .diff-delta { color: var(--faint); font-size: 11px; }
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(2px); z-index: 50; align-items: flex-end; justify-content: center; }
+  .modal-backdrop.open { display: flex; }
+  .modal-sheet { background: var(--card); border: 1px solid var(--border); border-radius: 16px 16px 0 0; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; padding: 20px; box-shadow: 0 -8px 30px rgba(0,0,0,.5); }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .modal-head h3 { margin: 0; font-size: 15px; }
+  .modal-close { background: none; border: none; color: var(--dim); font-size: 20px; cursor: pointer; padding: 4px 8px; }
+  textarea.code-box { width: 100%; min-height: 60px; margin-top: 6px; padding: 10px; border: 1px solid var(--border); border-radius: 9px; background: var(--bg2); color: var(--text); font-size: 10.5px; font-family: var(--mono); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <div class="brand">
+      <span class="infinity">∞</span>
+      <div>
+        <h1>SOXL 무한매수법</h1>
+        <div class="ticker">V4.0 · 라오어 방법론</div>
+      </div>
+    </div>
+    <button class="gear-btn" onclick="openSettings()">⚙</button>
+  </div>
+  <div class="trace-line"></div>
+</header>
+
+<main>
+
+  <div class="card">
+    <h2><span class="dot"></span>어제 체결 입력 → 자동 업데이트</h2>
+    <label class="field" style="margin-top:0">쿼터매도 체결됐나요?</label>
+    <div class="toggle-row">
+      <div id="qs-no" class="active red" onclick="setQuarterSell(false)">안됨</div>
+      <div id="qs-yes" class="cyan" onclick="setQuarterSell(true)">됨</div>
+    </div>
+    <label class="field">매수 체결됐나요?</label>
+    <div class="grid2">
+      <div>
+        <label class="field" style="margin-top:0">수량 (없으면 빈칸)</label>
+        <input type="number" id="in-buyqty" placeholder="1">
+      </div>
+      <div>
+        <label class="field" style="margin-top:0">체결가 ($)</label>
+        <input type="number" id="in-buyprice" placeholder="149.50">
+      </div>
+    </div>
+    <button class="btn amber" onclick="previewUpdate()">업데이트 미리보기</button>
+  </div>
+
+  <div class="card preview-card" id="preview-card" style="display:none">
+    <h2><span class="dot"></span>업데이트 결과 미리보기</h2>
+    <div class="diff-row"><span>T값</span><span><span id="pv-t-old"></span><span class="diff-arrow">→</span><span class="diff-new" id="pv-t-new"></span></span><span class="diff-delta" id="pv-t-delta"></span></div>
+    <div class="diff-row"><span>보유</span><span><span id="pv-shares-old"></span><span class="diff-arrow">→</span><span class="diff-new" id="pv-shares-new"></span></span><span class="diff-delta" id="pv-shares-delta"></span></div>
+    <div class="diff-row"><span>평단</span><span><span id="pv-avg-old"></span><span class="diff-arrow">→</span><span class="diff-new" id="pv-avg-new"></span></span><span class="diff-delta" id="pv-avg-delta"></span></div>
+    <div class="diff-row"><span>잔금</span><span><span id="pv-cash-old"></span><span class="diff-arrow">→</span><span class="diff-new" id="pv-cash-new"></span></span><span class="diff-delta" id="pv-cash-delta"></span></div>
+    <label class="field">증권사 평단가 직접 입력 (선택)</label>
+    <input type="text" id="pv-avg-override" placeholder="자동계산 값 사용">
+    <button class="btn amber" onclick="applyPreview()">공통 설정에 반영하기</button>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>공통 설정</h2>
+    <div class="grid2">
+      <div>
+        <label class="field" style="margin-top:0">원금 ($)</label>
+        <input type="number" id="set-principal">
+      </div>
+      <div>
+        <label class="field" style="margin-top:0">분할수</label>
+        <select id="set-split" onchange="onSplitChange()">
+          <option value="40">40분할</option>
+          <option value="20">20분할</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="field">평균단가 ($)</label>
+        <input type="number" id="set-avg">
+      </div>
+      <div>
+        <label class="field">보유수량 (주)</label>
+        <input type="number" id="set-shares">
+      </div>
+    </div>
+    <label class="field">가용 잔금 ($)</label>
+    <input type="number" id="set-cash">
+    <button class="btn ghost" onclick="saveCommon()">저장</button>
+  </div>
+
+  <div class="card">
+    <div class="t-head">
+      <span class="t-label">T값 · 진행회차</span>
+      <span class="t-big" id="t-display">0.000</span>
+    </div>
+    <div class="t-segments" id="t-segments"></div>
+    <div class="t-labels"><span>0</span><span id="t-mid-label">전반전 끝(20)</span><span id="t-max-label">소진(40)</span></div>
+    <input type="range" id="t-slider" min="0" max="40" step="0.1" oninput="onSliderChange()" style="width:100%;margin-top:14px;accent-color:var(--amber)">
+    <label class="field">T값 직접 입력</label>
+    <input type="number" id="t-manual" step="0.01" onchange="onManualT()">
+    <div id="t-phase-banner"></div>
+  </div>
+
+  <div class="mode-tabs">
+    <div class="mode-tab active-normal" id="mt-normal" onclick="switchMode('normal')">일반</div>
+    <div class="mode-tab" id="mt-reverse" onclick="switchMode('reverse')">리버스</div>
+    <div class="mode-tab" id="mt-chart" onclick="switchMode('chart')">차트</div>
+    <div class="mode-tab" id="mt-profit" onclick="switchMode('profit')">수익률</div>
+  </div>
+
+  <div class="mode-page active" id="mp-normal">
+    <div class="card">
+      <h2><span class="dot"></span>일반모드 설정</h2>
+      <label class="field" style="margin-top:0">추가 LOC 라인 수 (하락 대비 사다리)</label>
+      <input type="number" id="normal-lines" value="8">
+      <div class="banner info">사다리 하락률은 실제 예시표를 역산한 고정 공식(%_k = 101/(10+k))으로 자동 적용돼요. 1단계 약 9.2%, 이후 8.3%→7.7%→7.2%→6.7%→6.3%… 점점 좁아져요.</div>
+      <button class="btn amber" onclick="calcNormalOrder()">일반모드 주문표 계산</button>
+    </div>
+    <div class="card" id="normal-result" style="display:none">
+      <h2><span class="dot"></span>주문표</h2>
+      <div class="row"><span class="label">평단 LOC (매수)</span><span class="val" id="nr-avgloc">-</span></div>
+      <div class="row"><span class="label">20% 목표가 (쿼터매도)</span><span class="val" id="nr-target">-</span></div>
+      <table><thead><tr><th>단계</th><th>가격</th><th>수량</th></tr></thead><tbody id="nr-table"></tbody></table>
+    </div>
+    <div class="card">
+      <h2 onclick="toggleBigNumber()" style="cursor:pointer;justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:6px"><span class="dot"></span>새 사이클 · 큰수매수 (특수 상황)</span>
+        <span id="bignum-caret">▾</span>
+      </h2>
+      <div id="bignum-body" style="display:none">
+        <label class="field" style="margin-top:0">전일 종가 ($)</label>
+        <input type="number" id="bignum-prevclose" placeholder="149.50">
+        <label class="field">가산율 (%) — 새사이클 10%, 큰 하락시 10~20%</label>
+        <input type="number" id="bignum-pct" value="10" step="1">
+        <button class="btn ghost" onclick="calcBigNumber()">LOC 매수가 계산</button>
+        <div id="bignum-result"></div>
+        <div class="banner info">사이클 중간 큰 하락시엔 별지점보다 훨씬 아래서 종가가 형성돼 매매 오류(거부)가 날 수 있어서, 전일종가 대비 10~20% 위쯤에 크게 잡아 매수 걸어두는 용도예요. 그 가격 위의 모든 매수 개수를 합산해서 한 번에 겁니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mode-page" id="mp-reverse">
+    <div class="card">
+      <h2 class="red"><span class="dot"></span>리버스모드 설정</h2>
+      <div class="banner danger">진입조건: 20분할은 T&gt;19, 40분할은 T&gt;39부터. 종료조건: 종가가 평단×0.8(=-20%회복)을 넘으면 일반모드 복귀.</div>
+      <label class="field">리버스모드 진행일</label>
+      <div class="toggle-row">
+        <div id="rv-day1" class="active red" onclick="setReverseDay(1)">첫날(MOC 매도만)</div>
+        <div id="rv-day2" onclick="setReverseDay(2)">둘째날~</div>
+      </div>
+      <div style="font-size:11.5px;color:var(--faint);margin-top:8px" id="rv-day-note">첫날은 매도만 있고 매수는 없어요. 별지점 계산 없이 무조건 MOC 매도예요.</div>
+      <div id="rv-closes-box">
+        <label class="field">직전 5거래일 종가 (오래된 순 → 최근)</label>
+        <div class="grid5">
+          <div><label>5일전</label><input type="number" id="rv-d5" value="0"></div>
+          <div><label>4일전</label><input type="number" id="rv-d4" value="0"></div>
+          <div><label>3일전</label><input type="number" id="rv-d3" value="0"></div>
+          <div><label>2일전</label><input type="number" id="rv-d2" value="0"></div>
+          <div><label>1일전</label><input type="number" id="rv-d1" value="0"></div>
+        </div>
+      </div>
+      <label class="field">오늘 종가 (종료조건 체크용, 선택)</label>
+      <input type="number" id="rv-todayclose" placeholder="입력하면 종료조건도 같이 체크">
+      <button class="btn red" onclick="calcReverseOrder()">리버스모드 주문표 계산</button>
+    </div>
+    <div class="card" id="reverse-result" style="display:none">
+      <h2 class="red"><span class="dot"></span>리버스 주문표</h2>
+      <div class="row"><span class="label">별지점 (직전 5일 종가 평균)</span><span class="val" id="rr-base">-</span></div>
+      <div class="row"><span class="label">매도 (LOC/MOC)</span><span class="val" id="rr-sell">-</span></div>
+      <div class="row"><span class="label">매수 (쿼터매수)</span><span class="val" id="rr-buy">-</span></div>
+      <div id="rr-end-banner"></div>
+    </div>
+  </div>
+
+  <div class="mode-page" id="mp-chart">
+    <div class="card">
+      <h2 class="cyan"><span class="dot"></span>SOXL 차트</h2>
+      <div class="banner warn">이 페이지는 외부 사이트를 화면 안에 직접 띄울 수 없어요. 아래 버튼으로 새 탭에서 열어주세요.</div>
+      <a href="https://www.tradingview.com/symbols/AMEX-SOXL/" target="_blank" style="text-decoration:none">
+        <button class="btn cyan">TradingView에서 SOXL 차트 열기</button>
+      </a>
+      <a href="https://finance.yahoo.com/quote/SOXL/" target="_blank" style="text-decoration:none">
+        <button class="btn ghost">Yahoo Finance에서 열기</button>
+      </a>
+    </div>
+  </div>
+
+  <div class="mode-page" id="mp-profit">
+    <div class="card">
+      <h2><span class="dot" style="background:#8ef29a"></span>전체 수익 요약</h2>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="n" id="pf-cycles">0회</div><div class="l">총 사이클</div></div>
+        <div class="stat-box"><div class="n" id="pf-profit" style="color:#8ef29a">+$0</div><div class="l">누적 수익</div></div>
+        <div class="stat-box"><div class="n" id="pf-return" style="color:#8ef29a">+0%</div><div class="l">총 수익률</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="dot" style="background:#8ef29a"></span>사이클별 기록</h2>
+      <div id="cycle-list"><div class="empty">아직 기록이 없어요.</div></div>
+    </div>
+    <div class="card">
+      <h2><span class="dot" style="background:#8ef29a"></span>사이클 종료 기록 추가</h2>
+      <div class="grid2">
+        <div><label class="field" style="margin-top:0">시작일</label><input type="text" id="cy-start-date" placeholder="2026-06-01"></div>
+        <div><label class="field" style="margin-top:0">종료일</label><input type="text" id="cy-end-date" placeholder="2026-07-01"></div>
+      </div>
+      <div class="grid2">
+        <div><label class="field">시작 자본 ($)</label><input type="number" id="cy-start-amt"></div>
+        <div><label class="field">종료 자본 ($)</label><input type="number" id="cy-end-amt"></div>
+      </div>
+      <label class="field">메모</label>
+      <input type="text" id="cy-note" placeholder="예: 상승장에서 시작">
+      <button class="btn ghost" onclick="addCycle()">기록 추가</button>
+    </div>
+  </div>
+
+</main>
+
+<div class="modal-backdrop" id="settings-modal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <h3>⚙ 설정</h3>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+
+    <h2 style="margin-bottom:10px"><span class="dot"></span>데이터 백업 / 복원</h2>
+    <div class="banner warn">앱이 업데이트되면 기존 데이터가 안 보일 수 있어요. 업데이트 전엔 꼭 내보내기 코드를 복사해두세요.</div>
+    <label class="field">① 내보내기</label>
+    <textarea id="backup-export" class="code-box" readonly></textarea>
+    <div class="btn-row">
+      <button class="btn ghost" onclick="exportBackup()">코드 생성</button>
+      <button class="btn amber" onclick="copyBackup()">코드 복사</button>
+    </div>
+    <label class="field" style="margin-top:20px">② 가져오기</label>
+    <textarea id="backup-import" class="code-box" placeholder="이전 코드 붙여넣기"></textarea>
+    <button class="btn amber" onclick="importBackup()">이 코드로 복원</button>
+
+    <h2 style="margin:22px 0 10px" class="red"><span class="dot"></span>초기화</h2>
+    <button class="btn red" onclick="resetAll()">전체 데이터 초기화</button>
+  </div>
+</div>
+
+<script>
+const KEY = 'soxl_mmv4';
+
+function defaultState() {
+  return { principal: 5000, split: 40, avg: 149, shares: 0, cash: 5000, t: 0, cycles: [] };
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return defaultState();
+    return Object.assign(defaultState(), JSON.parse(raw));
+  } catch (e) { return defaultState(); }
+}
+function persist() { localStorage.setItem(KEY, JSON.stringify(S)); }
+
+let S = loadState();
+let quarterSell = false;
+let reverseDay = 1;
+let preview = null;
+
+function starPercent(T, split) {
+  return split === 20 ? (20 - 2 * T) : (20 - T);
+}
+function starPoint(avg, T, split) {
+  return avg * (1 + starPercent(T, split) / 100);
+}
+function unitBuyAmount(cash, T, split) {
+  const remain = split - T;
+  return remain > 0 ? cash / remain : cash;
+}
+function isFirstHalf(T, split) { return T < split / 2; }
+function reverseThreshold(split) {
+  return split === 20 ? 19 : 39;
+}
+
+function openSettings() { document.getElementById('settings-modal').classList.add('open'); }
+function closeSettings() { document.getElementById('settings-modal').classList.remove('open'); }
+
+function toggleBigNumber() {
+  const body = document.getElementById('bignum-body');
+  const caret = document.getElementById('bignum-caret');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  caret.textContent = open ? '▾' : '▴';
+}
+
+function fillCommon() {
+  document.getElementById('set-principal').value = S.principal;
+  document.getElementById('set-split').value = S.split;
+  document.getElementById('set-avg').value = S.avg;
+  document.getElementById('set-shares').value = S.shares;
+  document.getElementById('set-cash').value = S.cash;
+  document.getElementById('t-slider').max = S.split;
+  document.getElementById('t-slider').value = S.t;
+  document.getElementById('t-manual').value = S.t;
+  document.getElementById('t-mid-label').textContent = `전반전 끝(${S.split/2})`;
+  document.getElementById('t-max-label').textContent = `소진(${S.split})`;
+  updateTDisplay();
+}
+
+function renderSegments() {
+  const box = document.getElementById('t-segments');
+  const split = S.split;
+  const filled = Math.floor(S.t);
+  let html = '';
+  for (let i = 0; i < split; i++) {
+    let cls = 't-seg';
+    if (i < filled) cls += ' filled';
+    else if (i === filled && S.t % 1 > 0.01) cls += ' current';
+    html += `<div class="${cls}"></div>`;
+  }
+  box.innerHTML = html;
+}
+
+function updateTDisplay() {
+  document.getElementById('t-display').textContent = S.t.toFixed(3);
+  renderSegments();
+  const banner = document.getElementById('t-phase-banner');
+  if (!banner) return;
+  const threshold = reverseThreshold(S.split);
+  if (S.t > threshold) {
+    banner.innerHTML = `<div class="banner danger">T값이 ${threshold}를 넘었어요 — 소진(리버스모드) 진입 조건이에요. 리버스 탭에서 진행하세요.</div>`;
+  } else if (isFirstHalf(S.t, S.split)) {
+    banner.innerHTML = `<div class="banner info">전반전 · T ${S.t.toFixed(1)} / ${S.split/2} 미만</div>`;
+  } else {
+    banner.innerHTML = `<div class="banner warn">후반전 · T ${S.t.toFixed(1)} / ${threshold} 이하</div>`;
+  }
+}
+
+function setQuarterSell(v) {
+  quarterSell = v;
+  document.getElementById('qs-no').classList.toggle('active', !v);
+  document.getElementById('qs-yes').classList.toggle('active', v);
+}
+
+function onSplitChange() {
+  S.split = parseInt(document.getElementById('set-split').value);
+  document.getElementById('t-slider').max = S.split;
+  document.getElementById('t-mid-label').textContent = `전반전 끝(${S.split/2})`;
+  document.getElementById('t-max-label').textContent = `소진(${S.split})`;
+  persist();
+  updateTDisplay();
+}
+function onSliderChange() {
+  S.t = parseFloat(document.getElementById('t-slider').value);
+  document.getElementById('t-manual').value = S.t;
+  updateTDisplay();
+  persist();
+}
+function onManualT() {
+  S.t = parseFloat(document.getElementById('t-manual').value) || 0;
+  document.getElementById('t-slider').value = S.t;
+  updateTDisplay();
+  persist();
+}
+
+function saveCommon() {
+  S.principal = parseFloat(document.getElementById('set-principal').value) || S.principal;
+  S.split = parseInt(document.getElementById('set-split').value);
+  S.avg = parseFloat(document.getElementById('set-avg').value) || S.avg;
+  S.shares = parseFloat(document.getElementById('set-shares').value) || 0;
+  S.cash = parseFloat(document.getElementById('set-cash').value) || 0;
+  persist();
+  fillCommon();
+}
+
+function previewUpdate() {
+  let t = S.t, avg = S.avg, shares = S.shares, cash = S.cash;
+  if (quarterSell) {
+    const targetPrice = avg * 1.20;
+    const qtySold = Math.floor(shares / 4);
+    cash += qtySold * targetPrice;
+    shares -= qtySold;
+    t = t * 0.75;
+  }
+  const buyQty = parseFloat(document.getElementById('in-buyqty').value);
+  const buyPrice = parseFloat(document.getElementById('in-buyprice').value);
+  if (buyQty && buyPrice) {
+    const cost = buyQty * buyPrice;
+    const newShares = shares + buyQty;
+    avg = newShares > 0 ? ((avg * shares) + cost) / newShares : buyPrice;
+    const todayUnit = unitBuyAmount(cash, t, S.split);
+    const tIncrement = todayUnit > 0 ? (cost / todayUnit) : 0;
+    shares = newShares;
+    cash -= cost;
+    t = t + tIncrement;
+  }
+  preview = { t, avg, shares, cash };
+
+  document.getElementById('pv-t-old').textContent = S.t.toFixed(3);
+  document.getElementById('pv-t-new').textContent = t.toFixed(3);
+  document.getElementById('pv-t-delta').textContent = '(' + (t - S.t >= 0 ? '+' : '') + (t - S.t).toFixed(3) + ')';
+
+  document.getElementById('pv-shares-old').textContent = S.shares + '주';
+  document.getElementById('pv-shares-new').textContent = shares + '주';
+  document.getElementById('pv-shares-delta').textContent = '(' + (shares - S.shares >= 0 ? '+' : '') + (shares - S.shares) + ')';
+
+  document.getElementById('pv-avg-old').textContent = '$' + S.avg.toFixed(2);
+  document.getElementById('pv-avg-new').textContent = '$' + avg.toFixed(2);
+  document.getElementById('pv-avg-delta').textContent = '(' + (avg - S.avg >= 0 ? '+' : '') + (avg - S.avg).toFixed(3) + ')';
+
+  document.getElementById('pv-cash-old').textContent = '$' + S.cash.toFixed(2);
+  document.getElementById('pv-cash-new').textContent = '$' + cash.toFixed(2);
+  document.getElementById('pv-cash-delta').textContent = '(' + (cash - S.cash >= 0 ? '+' : '') + (cash - S.cash).toFixed(3) + ')';
+
+  document.getElementById('pv-avg-override').placeholder = `자동계산: $${avg.toFixed(2)}`;
+  document.getElementById('preview-card').style.display = 'block';
+}
+
+function applyPreview() {
+  if (!preview) return;
+  const override = parseFloat(document.getElementById('pv-avg-override').value);
+  S.t = preview.t;
+  S.avg = !isNaN(override) ? override : preview.avg;
+  S.shares = preview.shares;
+  S.cash = preview.cash;
+  persist();
+  fillCommon();
+  document.getElementById('preview-card').style.display = 'none';
+  document.getElementById('in-buyqty').value = '';
+  document.getElementById('in-buyprice').value = '';
+  setQuarterSell(false);
+  preview = null;
+}
+
+function switchMode(name) {
+  ['normal','reverse','chart','profit'].forEach(m => {
+    document.getElementById('mp-' + m).classList.toggle('active', m === name);
+    document.getElementById('mt-' + m).classList.remove('active-normal','active-reverse','active-chart','active-profit');
+  });
+  document.getElementById('mt-' + name).classList.add('active-' + name);
+  if (name === 'profit') renderProfit();
+}
+
+function exportBackup() {
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+  document.getElementById('backup-export').value = code;
+}
+function copyBackup() {
+  const box = document.getElementById('backup-export');
+  if (!box.value) exportBackup();
+  box.select();
+  box.setSelectionRange(0, 99999);
+  try {
+    document.execCommand('copy');
+    alert('복사됐어요! 새 파일 열면 가져오기에 붙여넣으세요.');
+  } catch (e) {
+    navigator.clipboard?.writeText(box.value);
+    alert('복사됐어요! 새 파일 열면 가져오기에 붙여넣으세요.');
+  }
+}
+function importBackup() {
+  const code = document.getElementById('backup-import').value.trim();
+  if (!code) { alert('코드를 붙여넣어주세요.'); return; }
+  try {
+    const restored = JSON.parse(decodeURIComponent(escape(atob(code))));
+    if (!confirm('현재 데이터를 덮어쓰고 복원할까요?')) return;
+    S = Object.assign(defaultState(), restored);
+    persist();
+    fillCommon();
+    document.getElementById('backup-import').value = '';
+    alert('복원 완료!');
+  } catch (e) {
+    alert('코드를 읽을 수 없어요. 전체가 잘 복사됐는지 확인해주세요.');
+  }
+}
+function resetAll() {
+  if (!confirm('모든 데이터를 초기화할까요? 되돌릴 수 없어요.')) return;
+  S = defaultState();
+  persist();
+  fillCommon();
+  closeSettings();
+}
+
+function calcBigNumber() {
+  const prevClose = parseFloat(document.getElementById('bignum-prevclose').value);
+  const pct = parseFloat(document.getElementById('bignum-pct').value) || 10;
+  if (!prevClose) { alert('전일 종가를 입력해주세요.'); return; }
+  const bigPrice = prevClose * (1 + pct / 100);
+  document.getElementById('bignum-result').innerHTML =
+    `<div class="row"><span class="label">LOC 매수가</span><span class="val">$${bigPrice.toFixed(2)}</span></div>
+     <div class="banner info">이 가격($${bigPrice.toFixed(2)}) 위에 걸려있던 기존 매수 라인들의 개수를 전부 더해서, 이 한 가격에 합쳐서 거세요.</div>`;
+}
+
+function ladderStep(k) { return 101 / (10 + k); }
+function buildLadder(basePrice, lines) {
+  let html = '', price = basePrice;
+  for (let i = 1; i <= lines; i++) {
+    const pct = ladderStep(i);
+    price = price * (1 - pct / 100);
+    html += `<tr><td>${i}단계 (−${pct.toFixed(2)}%)</td><td>$${price.toFixed(2)}</td><td>1주</td></tr>`;
+  }
+  return html;
+}
+
+function calcNormalOrder() {
+  const lines = parseInt(document.getElementById('normal-lines').value) || 8;
+  const unit = unitBuyAmount(S.cash, S.t, S.split);
+  const sp = starPoint(S.avg, S.t, S.split);
+  const buyPoint = sp - 0.01;
+  const target = S.avg * 1.20;
+  const firstHalf = isFirstHalf(S.t, S.split);
+
+  document.getElementById('nr-target').textContent = `$${target.toFixed(2)} · ${Math.floor(S.shares / 4)}주`;
+
+  let html = '';
+  if (firstHalf) {
+    const half = unit / 2;
+    const qtyStar = Math.floor(half / buyPoint);
+    const qtyAvg = Math.floor(half / S.avg);
+    document.getElementById('nr-avgloc').textContent = `평단 ${qtyAvg}주 / 별지점 ${qtyStar}주`;
+    html = `<tr><td>별지점(전반전)</td><td>$${buyPoint.toFixed(2)}</td><td>${qtyStar}주</td></tr>
+            <tr><td>평단(전반전)</td><td>$${S.avg.toFixed(2)}</td><td>${qtyAvg}주</td></tr>`
+      + buildLadder(S.avg, lines);
+  } else {
+    const qtyStar = Math.floor(unit / buyPoint);
+    document.getElementById('nr-avgloc').textContent = `별지점 ${qtyStar}주 (후반전은 전체를 별지점에)`;
+    html = `<tr><td>별지점(후반전)</td><td>$${buyPoint.toFixed(2)}</td><td>${qtyStar}주</td></tr>`
+      + buildLadder(buyPoint, lines);
+  }
+  document.getElementById('nr-table').innerHTML = html;
+  document.getElementById('normal-result').style.display = 'block';
+}
+
+function setReverseDay(d) {
+  reverseDay = d;
+  document.getElementById('rv-day1').classList.toggle('active', d === 1);
+  document.getElementById('rv-day2').classList.toggle('active', d === 2);
+  document.getElementById('rv-closes-box').style.display = d === 1 ? 'none' : 'block';
+  document.getElementById('rv-day-note').textContent = d === 1
+    ? '첫날은 매도만 있고 매수는 없어요. 별지점 계산 없이 무조건 MOC 매도예요.'
+    : '별지점(직전 5일 종가 평균) 기준으로 매도/매수를 동시에 계산해요.';
+}
+
+function calcReverseOrder() {
+  const split = S.split;
+  const divisor = split === 20 ? 10 : 20;
+
+  if (reverseDay === 1) {
+    const sellQty = Math.floor(S.shares / divisor);
+    document.getElementById('rr-base').textContent = '해당없음';
+    document.getElementById('rr-sell').textContent = `MOC 매도 · ${sellQty}주`;
+    document.getElementById('rr-buy').textContent = '없음 (첫날은 매수 없음)';
+    document.getElementById('rr-end-banner').innerHTML = '';
+  } else {
+    const closes = [
+      parseFloat(document.getElementById('rv-d5').value) || 0,
+      parseFloat(document.getElementById('rv-d4').value) || 0,
+      parseFloat(document.getElementById('rv-d3').value) || 0,
+      parseFloat(document.getElementById('rv-d2').value) || 0,
+      parseFloat(document.getElementById('rv-d1').value) || 0
+    ].filter(v => v > 0);
+    if (closes.length < 5) { alert('직전 5거래일 종가를 모두 입력해주세요.'); return; }
+    const base = closes.reduce((a, b) => a + b, 0) / closes.length;
+    const sellQty = Math.floor(S.shares / divisor);
+    const buyAmt = S.cash / 4;
+    const buyPoint = base - 0.01;
+    const buyQty = Math.floor(buyAmt / buyPoint);
+
+    document.getElementById('rr-base').textContent = '$' + base.toFixed(2);
+    document.getElementById('rr-sell').textContent = `$${base.toFixed(2)} · ${sellQty}주`;
+    document.getElementById('rr-buy').textContent = `$${buyPoint.toFixed(2)} · ${buyQty}주`;
+
+    const todayClose = parseFloat(document.getElementById('rv-todayclose').value);
+    if (!isNaN(todayClose)) {
+      const endThreshold = S.avg * 0.8;
+      if (todayClose > endThreshold) {
+        document.getElementById('rr-end-banner').innerHTML =
+          `<div class="banner info">종가 $${todayClose.toFixed(2)}가 종료기준($${endThreshold.toFixed(2)})을 넘었어요. 오늘부터 일반모드로 복귀해도 돼요 (T값 그대로 연결).</div>`;
+      } else {
+        document.getElementById('rr-end-banner').innerHTML =
+          `<div class="banner warn">아직 종료기준($${endThreshold.toFixed(2)}) 미만이라 리버스모드 유지예요.</div>`;
+      }
+    } else {
+      document.getElementById('rr-end-banner').innerHTML = '';
+    }
+  }
+  document.getElementById('reverse-result').style.display = 'block';
+}
+
+function renderProfit() {
+  const cycles = S.cycles || [];
+  document.getElementById('pf-cycles').textContent = cycles.length + '회';
+  const totalProfit = cycles.reduce((a, c) => a + (c.end - c.start), 0);
+  const totalStart = cycles.reduce((a, c) => a + c.start, 0);
+  const totalReturn = totalStart > 0 ? (totalProfit / totalStart) * 100 : 0;
+  document.getElementById('pf-cycles').textContent = cycles.length + '회';
+  document.getElementById('pf-profit').textContent = (totalProfit >= 0 ? '+' : '') + '$' + totalProfit.toFixed(0);
+  document.getElementById('pf-return').textContent = (totalReturn >= 0 ? '+' : '') + totalReturn.toFixed(1) + '%';
+
+  const list = document.getElementById('cycle-list');
+  if (cycles.length === 0) {
+    list.innerHTML = '<div class="empty">아직 기록이 없어요.</div>';
+    return;
+  }
+  list.innerHTML = cycles.map((c, i) => {
+    const profit = c.end - c.start;
+    const ret = c.start > 0 ? (profit / c.start) * 100 : 0;
+    return `<div class="cycle-item">
+      <div class="cycle-top"><span>사이클 ${i + 1}</span><span style="color:${profit>=0?'#8ef29a':'var(--red)'}">${profit>=0?'+':''}$${profit.toFixed(0)}</span></div>
+      <div class="cycle-sub"><span>${c.start_date || ''} ~ ${c.end_date || ''} · ${c.note || ''}</span><span>${ret>=0?'+':''}${ret.toFixed(1)}%</span></div>
+      <div style="text-align:right;margin-top:4px"><span style="color:var(--faint);font-size:11px">$${c.start} → $${c.end}</span> <button class="del-link" onclick="deleteCycle(${i})">삭제</button></div>
+    </div>`;
+  }).join('');
+}
+
+function addCycle() {
+  const start = parseFloat(document.getElementById('cy-start-amt').value);
+  const end = parseFloat(document.getElementById('cy-end-amt').value);
+  if (!start || !end) { alert('시작/종료 자본을 입력해주세요.'); return; }
+  S.cycles.push({
+    start, end,
+    start_date: document.getElementById('cy-start-date').value,
+    end_date: document.getElementById('cy-end-date').value,
+    note: document.getElementById('cy-note').value
+  });
+  persist();
+  renderProfit();
+  document.getElementById('cy-start-amt').value = '';
+  document.getElementById('cy-end-amt').value = '';
+  document.getElementById('cy-start-date').value = '';
+  document.getElementById('cy-end-date').value = '';
+  document.getElementById('cy-note').value = '';
+}
+function deleteCycle(i) {
+  if (!confirm('이 사이클 기록을 삭제할까요?')) return;
+  S.cycles.splice(i, 1);
+  persist();
+  renderProfit();
+}
+
+fillCommon();
+</script>
+</body>
+</html>
