@@ -55,21 +55,20 @@ export function calcNormal(
 
   const buyOrders: OrderRow[] = [];
   const sellOrders: OrderRow[] = [];
+  const firstDayPrice = settings.previousClose > 0 ? r2(settings.previousClose * 1.1) : 0;
 
   if (!isReverseNeeded) {
     if (T === 0) {
-      const bigBuyPrice = r2(avg * 1.12);
-      const bigBuyQty = bigBuyPrice > 0 ? Math.max(1, Math.floor(buyAmt / bigBuyPrice)) : 0;
-      if (bigBuyQty > 0) {
+      const firstDayQty = firstDayPrice > 0 ? Math.floor(buyAmt / firstDayPrice) : 0;
+      if (firstDayQty > 0) {
         buyOrders.push({
-          price: bigBuyPrice,
-          qty: bigBuyQty,
+          price: firstDayPrice,
+          qty: firstDayQty,
           type: "LOC",
-          tag: "큰수(메인)",
+          tag: "첫날 +10%(메인)",
           main: true,
         });
       }
-      buyOrders.push(...makeLadder(avg, step, settings.locLines));
     } else if (!isSecondHalf) {
       const half = buyAmt / 2;
       const q1 = buyP > 0 ? Math.max(1, Math.floor(half / buyP)) : 0;
@@ -149,6 +148,7 @@ export function calcNormal(
     isReverseNeeded,
     buyOrders,
     sellOrders,
+    firstDayPrice,
   };
 }
 
@@ -269,12 +269,16 @@ export function applyFills(
   }
 
   if (buy && buy.qty > 0 && buy.price > 0) {
+    const balanceBeforeBuy = nB;
     const totalCost = nA * nQ + buy.price * buy.qty;
     nQ = nQ + buy.qty;
     nA = nQ > 0 ? r2(totalCost / nQ) : 0;
     nB = r2(nB - buy.price * buy.qty);
     if (mode === "normal") {
-      nT = r2(nT + buy.qty);
+      const remainingTurns = split - nT;
+      const oneBuyAmount = remainingTurns > 0 ? balanceBeforeBuy / remainingTurns : 0;
+      const tIncrement = oneBuyAmount > 0 ? (buy.price * buy.qty) / oneBuyAmount : 0;
+      nT = r2(nT + tIncrement);
     } else {
       nT = r2(nT + (split - nT) * 0.25);
     }

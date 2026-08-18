@@ -12,6 +12,7 @@ export interface CommonState {
 export interface NormalSettings {
   locSpread: number;
   locLines: number;
+  previousClose: number;
 }
 
 export interface ReverseSettings {
@@ -43,6 +44,7 @@ export interface NormalResult {
   isReverseNeeded: boolean;
   buyOrders: OrderRow[];
   sellOrders: OrderRow[];
+  firstDayPrice: number;
 }
 
 export interface ReverseResult {

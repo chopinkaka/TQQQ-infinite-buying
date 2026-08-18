@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Mono, Syne } from "next/font/google";
 import "./globals.css";
+import PwaRegister from "@/components/PwaRegister";
 
 const dmMono = DM_Mono({
   variable: "--font-dm-mono",
@@ -17,6 +18,17 @@ const syne = Syne({
 export const metadata: Metadata = {
   title: "무한매수법 V4.0 계산기",
   description: "TQQQ 무한매수법 주문표 계산기 (라오어 V4.0)",
+  applicationName: "TQQQ 무한매수",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/icons/tqqq-app.svg",
+    apple: "/icons/tqqq-app.svg",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "TQQQ 무한매수",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
@@ -31,7 +43,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${dmMono.variable} ${syne.variable}`}>{children}</body>
+      <body className={`${dmMono.variable} ${syne.variable}`}>
+        <PwaRegister />
+        {children}
+      </body>
     </html>
   );
 }

@@ -95,6 +95,43 @@ export default function NormalPanel({
         </div>
       </div>
 
+      {common.T === 0 && common.qty === 0 && (
+        <div className="card" style={{ borderColor: "rgba(0,122,85,.35)" }}>
+          <div className="stitle">
+            <div className="dot" style={{ background: "var(--green)" }} />
+            새 사이클 첫날
+          </div>
+          <div className="field">
+            <span className="lbl">직전 거래일 TQQQ 종가 ($)</span>
+            <input
+              type="number"
+              className="inp"
+              value={settings.previousClose || ""}
+              placeholder="직전 종가 입력"
+              step={0.01}
+              min={0}
+              onChange={(e) =>
+                onSettingsChange({ previousClose: parseFloat(e.target.value) || 0 })
+              }
+            />
+          </div>
+          {settings.previousClose > 0 ? (
+            <div className="okbox">
+              첫날 LOC 가격: <b>${res.firstDayPrice.toFixed(2)}</b> (직전 종가 ${settings.previousClose.toFixed(2)} × 1.10)
+              <br />
+              1회 매수금: <b>${res.buyAmt.toFixed(2)}</b> · 주문 가능 수량: <b>{res.buyOrders[0]?.qty ?? 0}주</b>
+            </div>
+          ) : (
+            <div className="infobox">
+              원칙: T=0에서 직전 거래일 종가의 +10% 가격으로 LOC 매수를 시작합니다.
+            </div>
+          )}
+          <div className="tipbox">
+            체결 후 위의 ‘어제 체결 입력’에 실제 수량과 체결가를 입력하세요. T값은 체결금액 ÷ 1회매수금으로 계산됩니다.
+          </div>
+        </div>
+      )}
+
       {res.isReverseNeeded && (
         <div className="warnbox">
           ⚠️ T값이 소진 구간(T&gt;{common.split - 1})입니다! 리버스모드 탭으로 전환하세요.

@@ -29,6 +29,7 @@ const DEFAULT_COMMON: CommonState = {
 const DEFAULT_NORMAL: NormalSettings = {
   locSpread: 5.5,
   locLines: 8,
+  previousClose: 0,
 };
 
 const DEFAULT_REVERSE: ReverseSettings = {
@@ -51,7 +52,13 @@ export default function Home() {
       common: DEFAULT_COMMON,
       normalSettings: DEFAULT_NORMAL,
     };
-    const migrated = migrateToCycle3(persisted, loadProfitRecords());
+    const migrated = migrateToCycle3(
+      {
+        ...persisted,
+        normalSettings: { ...DEFAULT_NORMAL, ...persisted.normalSettings },
+      },
+      loadProfitRecords(),
+    );
 
     setCommon(migrated.state.common);
     setNormalSettings(migrated.state.normalSettings);
