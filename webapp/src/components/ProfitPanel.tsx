@@ -44,8 +44,8 @@ export default function ProfitPanel({
   }
 
   const totalProfit = r2(records.reduce((a, r) => a + r.profit, 0));
-  const firstPrincipal = records[0]?.principal ?? 0;
-  const totalPct = firstPrincipal > 0 ? r2((totalProfit / firstPrincipal) * 100) : 0;
+  const totalPrincipal = records.reduce((sum, record) => sum + record.principal, 0);
+  const totalPct = totalPrincipal > 0 ? r2((totalProfit / totalPrincipal) * 100) : 0;
 
   return (
     <div>
