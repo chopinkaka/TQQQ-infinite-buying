@@ -11,6 +11,7 @@ import ProfitPanel from "@/components/ProfitPanel";
 import {
   loadProfitRecords,
   loadState,
+  migrateToCycle3,
   saveProfitRecords,
   saveState,
 } from "@/lib/storage";
@@ -46,12 +47,15 @@ export default function Home() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const persisted = loadState();
-    if (persisted) {
-      setCommon(persisted.common);
-      setNormalSettings(persisted.normalSettings);
-    }
-    setProfitRecords(loadProfitRecords());
+    const persisted = loadState() ?? {
+      common: DEFAULT_COMMON,
+      normalSettings: DEFAULT_NORMAL,
+    };
+    const migrated = migrateToCycle3(persisted, loadProfitRecords());
+
+    setCommon(migrated.state.common);
+    setNormalSettings(migrated.state.normalSettings);
+    setProfitRecords(migrated.records);
     setHydrated(true);
   }, []);
 
