@@ -75,7 +75,7 @@ export default function CommonSettingsCard({
           onChange={(e) => onChange({ bal: parseFloat(e.target.value) || 0 })}
         />
       </div>
-      <TBar T={common.T} split={common.split} onChange={(v) => onChange({ T: v })} />
+      <TBar T={common.T} split={common.split} />
     </div>
   );
 }

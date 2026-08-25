@@ -1,10 +1,11 @@
-export type TabKey = "N" | "R" | "C" | "P";
+export type TabKey = "N" | "R" | "C" | "P" | "S";
 
 const ITEMS: Record<TabKey, { icon: string; label: string }> = {
   N: { icon: "⌁", label: "오늘 주문" },
   R: { icon: "↻", label: "리버스" },
   C: { icon: "▥", label: "차트" },
   P: { icon: "₩", label: "수익" },
+  S: { icon: "⚙", label: "설정" },
 };
 
 export default function Tabs({
@@ -14,7 +15,7 @@ export default function Tabs({
   active: TabKey;
   onChange: (t: TabKey) => void;
 }) {
-  const keys: TabKey[] = ["N", "R", "C", "P"];
+  const keys: TabKey[] = ["N", "R", "C", "P", "S"];
   return (
     <div className="tab-row">
       {keys.map((k) => (

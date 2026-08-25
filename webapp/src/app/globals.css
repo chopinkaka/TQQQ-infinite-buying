@@ -581,3 +581,39 @@ body {
 @media (min-width: 560px) {
   .tab-row { border-bottom: 1px solid #dce7f5; }
 }
+
+.strategy-settings-inline { display: none; }
+
+.first-day-card {
+  padding: 0;
+  overflow: hidden;
+  border-color: rgba(0, 122, 85, 0.3);
+}
+
+.first-day-card summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 17px 19px;
+  color: var(--green);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.first-day-card summary::-webkit-details-marker { display: none; }
+.first-day-card summary::after { content: "+"; font-size: 20px; font-weight: 400; }
+.first-day-card[open] summary::after { content: "−"; }
+.first-day-card summary small { margin-left: auto; margin-right: 10px; color: var(--dim); font-size: 9px; font-weight: 500; }
+.first-day-content { padding: 0 19px 19px; border-top: 1px solid rgba(0, 122, 85, 0.12); }
+.first-day-content > .field { margin-top: 16px; }
+
+.t-auto-note {
+  margin-top: 10px;
+  padding-top: 9px;
+  border-top: 1px solid var(--border);
+  color: var(--dim);
+  font-size: 10px;
+  text-align: center;
+}

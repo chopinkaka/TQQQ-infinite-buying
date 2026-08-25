@@ -8,6 +8,7 @@ import NormalPanel from "@/components/NormalPanel";
 import ReversePanel from "@/components/ReversePanel";
 import ChartPanel from "@/components/ChartPanel";
 import ProfitPanel from "@/components/ProfitPanel";
+import StrategySettingsCard from "@/components/StrategySettingsCard";
 import {
   loadProfitRecords,
   loadState,
@@ -125,24 +126,27 @@ export default function Home() {
         <Tabs active={activeTab} onChange={setActiveTab} />
 
         <div style={{ display: activeTab === "N" ? "block" : "none" }}>
+          <div className="section-heading"><span>체결 반영</span><small>실제 체결 후 입력</small></div>
+          <FillCard common={common} onApply={patchCommon} />
           <div className="section-heading"><span>오늘 할 일</span><small>일반모드 주문표</small></div>
           <NormalPanel common={common} settings={normalSettings} onSettingsChange={patchNormalSettings} />
         </div>
         <div style={{ display: activeTab === "R" ? "block" : "none" }}>
+          <div className="section-heading"><span>체결 반영</span><small>실제 체결 후 입력</small></div>
+          <FillCard common={common} onApply={patchCommon} />
           <div className="section-heading"><span>리버스 관리</span><small>소진 후 대응</small></div>
           <ReversePanel common={common} settings={reverseSettings} onSettingsChange={patchReverseSettings} />
         </div>
-        {(activeTab === "N" || activeTab === "R") && (
-          <>
-          <div className="section-heading"><span>체결 반영</span><small>실제 체결 후 입력</small></div>
-          <FillCard common={common} onApply={patchCommon} />
-          <div className="section-heading"><span>사이클 설정</span><small>원금·평단·잔금 관리</small></div>
-          <CommonSettingsCard common={common} onChange={patchCommon} />
-          </>
-        )}
         {activeTab === "C" && <ChartPanel />}
         {activeTab === "P" && (
           <ProfitPanel records={profitRecords} onAdd={addProfitRecord} onDelete={deleteProfitRecord} />
+        )}
+        {activeTab === "S" && (
+          <>
+            <div className="section-heading"><span>설정</span><small>사이클과 주문표 관리</small></div>
+            <CommonSettingsCard common={common} onChange={patchCommon} />
+            <StrategySettingsCard settings={normalSettings} onChange={patchNormalSettings} />
+          </>
         )}
 
         <div

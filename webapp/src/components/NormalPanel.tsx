@@ -62,7 +62,7 @@ export default function NormalPanel({
 
   return (
     <div>
-      <div className="card">
+      <div className="card strategy-settings-inline">
         <div className="stitle">
           <div className="dot" style={{ background: BLUE }} />
           일반모드 설정
@@ -96,11 +96,12 @@ export default function NormalPanel({
       </div>
 
       {common.T === 0 && common.qty === 0 && (
-        <div className="card" style={{ borderColor: "rgba(0,122,85,.35)" }}>
-          <div className="stitle">
-            <div className="dot" style={{ background: "var(--green)" }} />
-            새 사이클 첫날
-          </div>
+        <details className="card first-day-card">
+          <summary>
+            <span>새 사이클 시작 설정</span>
+            <small>첫날에만 열어주세요</small>
+          </summary>
+          <div className="first-day-content">
           <div className="field">
             <span className="lbl">직전 거래일 TQQQ 종가 ($)</span>
             <input
@@ -129,7 +130,8 @@ export default function NormalPanel({
           <div className="tipbox">
             체결 후 위의 ‘어제 체결 입력’에 실제 수량과 체결가를 입력하세요. T값은 체결금액 ÷ 1회매수금으로 계산됩니다.
           </div>
-        </div>
+          </div>
+        </details>
       )}
 
       {res.isReverseNeeded && (

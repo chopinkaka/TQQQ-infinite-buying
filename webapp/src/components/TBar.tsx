@@ -7,11 +7,9 @@ const RED = "#cc2244";
 export default function TBar({
   T,
   split,
-  onChange,
 }: {
   T: number;
   split: Split;
-  onChange: (v: number) => void;
 }) {
   const pct = Math.min(100, (T / split) * 100);
   const clr = pct > 90 ? RED : pct > 50 ? GOLD : BLUE;
@@ -48,26 +46,7 @@ export default function TBar({
           <span>전반전 끝 ({split / 2})</span>
           <span>소진 ({split})</span>
         </div>
-        <input
-          type="range"
-          min={0}
-          max={split}
-          step={0.001}
-          value={Math.min(T, split)}
-          onChange={(e) => onChange(parseFloat(e.target.value))}
-        />
-      </div>
-      <div className="field">
-        <span className="lbl">T값 직접 입력</span>
-        <input
-          type="number"
-          className="inp"
-          value={T}
-          step={0.001}
-          min={0}
-          max={50}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        />
+        <div className="t-auto-note">체결 반영에 따라 자동 계산됩니다</div>
       </div>
     </>
   );
