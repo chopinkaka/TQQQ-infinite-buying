@@ -47,6 +47,8 @@ export default function Home() {
   const [profitRecords, setProfitRecords] = useState<ProfitRecord[]>([]);
   const [activeTab, setActiveTab] = useState<TabKey>("N");
   const [hydrated, setHydrated] = useState(false);
+  const [quotePrice, setQuotePrice] = useState<number | null>(null);
+  const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<number | null>(null);
 
   useEffect(() => {
     const persisted = loadState() ?? {
@@ -76,6 +78,31 @@ export default function Home() {
     saveState({ common, normalSettings });
   }, [common, normalSettings, hydrated]);
 
+  useEffect(() => {
+    let active = true;
+
+    async function refreshQuote() {
+      try {
+        const response = await fetch("/api/quote", { cache: "no-store" });
+        if (!response.ok) return;
+        const quote = (await response.json()) as { price?: number; updatedAt?: number };
+        if (active && typeof quote.price === "number") {
+          setQuotePrice(quote.price);
+          setQuoteUpdatedAt(quote.updatedAt ?? Date.now());
+        }
+      } catch {
+        // 마지막 정상 가격을 유지한다.
+      }
+    }
+
+    refreshQuote();
+    const timer = window.setInterval(refreshQuote, 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, []);
+
   function patchCommon(patch: Partial<CommonState>) {
     setCommon((c) => ({ ...c, ...patch }));
   }
@@ -102,6 +129,9 @@ export default function Home() {
     saveProfitRecords(next);
   }
 
+  const stockValue = quotePrice === null ? null : quotePrice * common.qty;
+  const investmentTotal = stockValue === null && common.qty > 0 ? null : common.bal + (stockValue ?? 0);
+
   return (
     <>
       <header className="app-header">
@@ -114,11 +144,21 @@ export default function Home() {
 
       <div className="wrap">
         <section className="cycle-hero" aria-label="현재 사이클 요약">
-          <div className="hero-label">현재 운용 원금</div>
-          <div className="hero-amount">${common.principal.toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
+          <div className="hero-label">내 투자</div>
+          <div className="hero-amount">
+            {investmentTotal === null
+              ? "시세 확인 중"
+              : `$${investmentTotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          </div>
+          <div className="quote-line">
+            {quotePrice === null
+              ? "TQQQ 실시간 시세를 불러오는 중입니다"
+              : `TQQQ $${quotePrice.toFixed(2)} · 평가액 $${(stockValue ?? 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            {quoteUpdatedAt && <span> · 1분 갱신</span>}
+          </div>
           <div className="hero-grid">
-            <div><span>가용 잔금</span><b>${common.bal.toLocaleString("en-US", { maximumFractionDigits: 2 })}</b></div>
-            <div><span>보유</span><b>{common.qty}주</b></div>
+            <div><span>현금</span><b>${common.bal.toLocaleString("en-US", { maximumFractionDigits: 2 })}</b></div>
+            <div><span>TQQQ 보유</span><b>{common.qty}주</b></div>
             <div><span>진행 T</span><b>{common.T.toFixed(3)}</b></div>
           </div>
         </section>

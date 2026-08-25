@@ -465,7 +465,9 @@ body {
 }
 
 .hero-label { color: var(--dim2); font-size: 13px; font-weight: 600; }
-.hero-amount { margin-top: 5px; color: var(--text); font-size: clamp(34px, 10vw, 46px); font-weight: 800; letter-spacing: -0.06em; }
+.hero-amount { margin-top: 5px; color: var(--text); font-size: clamp(32px, 9vw, 42px); font-weight: 650; letter-spacing: -0.045em; }
+.quote-line { min-height: 18px; margin-top: 7px; color: var(--blue); font-size: 10px; font-weight: 600; }
+.quote-line span { color: var(--dim); font-weight: 500; }
 .hero-grid { display: grid; grid-template-columns: 1.45fr .8fr .8fr; gap: 8px; margin-top: 24px; }
 .hero-grid div { min-width: 0; }
 .hero-grid span { display: block; margin-bottom: 5px; color: var(--dim); font-size: 10px; }
