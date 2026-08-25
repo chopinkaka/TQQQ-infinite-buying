@@ -1,17 +1,10 @@
 export type TabKey = "N" | "R" | "C" | "P";
 
-const COLORS: Record<TabKey, string> = {
-  N: "#0077bb",
-  R: "#cc2244",
-  C: "#6366f1",
-  P: "#007a55",
-};
-
-const LABELS: Record<TabKey, string> = {
-  N: "📈 일반",
-  R: "🔄 리버스",
-  C: "📊 차트",
-  P: "💰 수익률",
+const ITEMS: Record<TabKey, { icon: string; label: string }> = {
+  N: { icon: "⌁", label: "오늘 주문" },
+  R: { icon: "↻", label: "리버스" },
+  C: { icon: "▥", label: "차트" },
+  P: { icon: "₩", label: "수익" },
 };
 
 export default function Tabs({
@@ -28,10 +21,11 @@ export default function Tabs({
         <button
           key={k}
           className={`tab-btn${active === k ? " active" : ""}`}
-          style={active === k ? { background: COLORS[k] } : undefined}
           onClick={() => onChange(k)}
+          aria-current={active === k ? "page" : undefined}
         >
-          {LABELS[k]}
+          <span className="tab-icon" aria-hidden="true">{ITEMS[k].icon}</span>
+          <span>{ITEMS[k].label}</span>
         </button>
       ))}
     </div>

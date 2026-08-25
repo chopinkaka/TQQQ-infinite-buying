@@ -103,42 +103,43 @@ export default function Home() {
 
   return (
     <>
-      <div
-        style={{
-          background: "linear-gradient(160deg,#daeeff,#eef6ff)",
-          borderBottom: "1px solid var(--border)",
-          padding: "22px 20px 16px",
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontFamily: "var(--font-display)", fontSize: "24px", fontWeight: 800, color: "#0077bb" }}>
-          ∞ 무한매수법 V4.0
+      <header className="app-header">
+        <div>
+          <div className="eyebrow">TQQQ · 3사이클</div>
+          <div className="app-title">무한매수</div>
         </div>
-        <div
-          style={{
-            fontSize: "10px",
-            marginTop: "4px",
-            letterSpacing: ".16em",
-            textTransform: "uppercase",
-            color: "var(--dim)",
-          }}
-        >
-          TQQQ · 주문표 계산기 · 라오어
-        </div>
-      </div>
+        <div className="live-pill"><span />자동 저장 중</div>
+      </header>
 
       <div className="wrap">
-        <FillCard common={common} onApply={patchCommon} />
-        <CommonSettingsCard common={common} onChange={patchCommon} />
+        <section className="cycle-hero" aria-label="현재 사이클 요약">
+          <div className="hero-label">현재 운용 원금</div>
+          <div className="hero-amount">${common.principal.toLocaleString("en-US", { maximumFractionDigits: 2 })}</div>
+          <div className="hero-grid">
+            <div><span>가용 잔금</span><b>${common.bal.toLocaleString("en-US", { maximumFractionDigits: 2 })}</b></div>
+            <div><span>보유</span><b>{common.qty}주</b></div>
+            <div><span>진행 T</span><b>{common.T.toFixed(3)}</b></div>
+          </div>
+        </section>
 
         <Tabs active={activeTab} onChange={setActiveTab} />
 
         <div style={{ display: activeTab === "N" ? "block" : "none" }}>
+          <div className="section-heading"><span>오늘 할 일</span><small>일반모드 주문표</small></div>
           <NormalPanel common={common} settings={normalSettings} onSettingsChange={patchNormalSettings} />
         </div>
         <div style={{ display: activeTab === "R" ? "block" : "none" }}>
+          <div className="section-heading"><span>리버스 관리</span><small>소진 후 대응</small></div>
           <ReversePanel common={common} settings={reverseSettings} onSettingsChange={patchReverseSettings} />
         </div>
+        {(activeTab === "N" || activeTab === "R") && (
+          <>
+          <div className="section-heading"><span>체결 반영</span><small>실제 체결 후 입력</small></div>
+          <FillCard common={common} onApply={patchCommon} />
+          <div className="section-heading"><span>사이클 설정</span><small>원금·평단·잔금 관리</small></div>
+          <CommonSettingsCard common={common} onChange={patchCommon} />
+          </>
+        )}
         {activeTab === "C" && <ChartPanel />}
         {activeTab === "P" && (
           <ProfitPanel records={profitRecords} onAdd={addProfitRecord} onDelete={deleteProfitRecord} />
@@ -151,6 +152,7 @@ export default function Home() {
             fontSize: "11px",
             color: "var(--dim)",
             lineHeight: 1.7,
+            paddingBottom: "18px",
           }}
         >
           데이터는 이 브라우저에 자동 저장됩니다.
