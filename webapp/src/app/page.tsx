@@ -12,6 +12,7 @@ import StrategySettingsCard from "@/components/StrategySettingsCard";
 import {
   loadProfitRecords,
   loadState,
+  migrateCycle3Holdings,
   migrateToCycle3,
   saveProfitRecords,
   saveState,
@@ -63,8 +64,10 @@ export default function Home() {
       loadProfitRecords(),
     );
 
-    setCommon(migrated.state.common);
-    setNormalSettings(migrated.state.normalSettings);
+    const currentState = migrateCycle3Holdings(migrated.state);
+
+    setCommon(currentState.common);
+    setNormalSettings(currentState.normalSettings);
     setProfitRecords(migrated.records);
     setHydrated(true);
   }, []);

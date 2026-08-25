@@ -3,6 +3,7 @@ import type { CommonState, NormalSettings, ProfitRecord } from "./types";
 const STATE_KEY = "muhan_state_v2";
 const PROFIT_KEY = "muhan_profit_v2";
 const CYCLE3_MIGRATION_KEY = "muhan_cycle3_2026_08_18";
+const CYCLE3_HOLDINGS_MIGRATION_KEY = "muhan_cycle3_holdings_2026_08_25";
 
 const HISTORICAL_PROFIT_RECORDS: ProfitRecord[] = [
   {
@@ -117,5 +118,32 @@ export function migrateToCycle3(
     return { state: nextState, records: mergedRecords };
   } catch {
     return { state, records };
+  }
+}
+
+/** 2026-08-18~24 실제 매수 체결 5건을 현재 사이클 상태로 한 번만 반영한다. */
+export function migrateCycle3Holdings(state: PersistedState): PersistedState {
+  if (typeof window === "undefined") return state;
+
+  try {
+    if (localStorage.getItem(CYCLE3_HOLDINGS_MIGRATION_KEY)) return state;
+
+    const nextState: PersistedState = {
+      ...state,
+      common: {
+        principal: 8000,
+        split: 40,
+        avg: 70.89,
+        qty: 18,
+        bal: 6724.06,
+        T: 6.3797,
+      },
+    };
+
+    saveState(nextState);
+    localStorage.setItem(CYCLE3_HOLDINGS_MIGRATION_KEY, "done");
+    return nextState;
+  } catch {
+    return state;
   }
 }
