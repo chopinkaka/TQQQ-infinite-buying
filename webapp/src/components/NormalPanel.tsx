@@ -4,6 +4,7 @@ import { useState } from "react";
 import { calcNormal } from "@/lib/calc";
 import type { CommonState, NormalSettings, Phase } from "@/lib/types";
 import OrderTable from "./OrderTable";
+import TBar from "./TBar";
 
 const BLUE = "#0077bb";
 
@@ -182,6 +183,8 @@ export default function NormalPanel({
           </div>
         </div>
       </div>
+
+      <TBar T={common.T} split={common.split} />
 
       <div className="card">
         <div

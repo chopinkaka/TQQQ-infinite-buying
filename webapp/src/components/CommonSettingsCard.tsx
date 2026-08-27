@@ -1,5 +1,4 @@
 import type { CommonState, Split } from "@/lib/types";
-import TBar from "./TBar";
 
 const BLUE = "#0077bb";
 
@@ -75,7 +74,6 @@ export default function CommonSettingsCard({
           onChange={(e) => onChange({ bal: parseFloat(e.target.value) || 0 })}
         />
       </div>
-      <TBar T={common.T} split={common.split} />
     </div>
   );
 }
