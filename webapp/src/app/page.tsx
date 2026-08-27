@@ -5,6 +5,7 @@ import CommonSettingsCard from "@/components/CommonSettingsCard";
 import FillCard from "@/components/FillCard";
 import Tabs, { type TabKey } from "@/components/Tabs";
 import NormalPanel from "@/components/NormalPanel";
+import OrderTimeCard from "@/components/OrderTimeCard";
 import ReversePanel from "@/components/ReversePanel";
 import ChartPanel from "@/components/ChartPanel";
 import ProfitPanel from "@/components/ProfitPanel";
@@ -189,6 +190,7 @@ export default function Home() {
             <div className="section-heading"><span>설정</span><small>사이클과 주문표 관리</small></div>
             <CommonSettingsCard common={common} onChange={patchCommon} />
             <StrategySettingsCard settings={normalSettings} onChange={patchNormalSettings} />
+            <OrderTimeCard />
           </>
         )}
 
