@@ -46,9 +46,7 @@ export default function CommonSettingsCard({
             type="number"
             className="inp"
             value={common.avg}
-            step={0.01}
-            min={0}
-            onChange={(e) => onChange({ avg: parseFloat(e.target.value) || 0 })}
+            readOnly
           />
         </div>
         <div className="field">
@@ -57,9 +55,7 @@ export default function CommonSettingsCard({
             type="number"
             className="inp"
             value={common.qty}
-            step={1}
-            min={0}
-            onChange={(e) => onChange({ qty: parseInt(e.target.value) || 0 })}
+            readOnly
           />
         </div>
       </div>
@@ -69,11 +65,10 @@ export default function CommonSettingsCard({
           type="number"
           className="inp"
           value={common.bal}
-          step={10}
-          min={0}
-          onChange={(e) => onChange({ bal: parseFloat(e.target.value) || 0 })}
+          readOnly
         />
       </div>
+      <div className="t-auto-note">평단·보유수량·현금은 거래내역 재생으로만 변경됩니다.</div>
     </div>
   );
 }

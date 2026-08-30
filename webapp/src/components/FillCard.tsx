@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { applyFills, r2 } from "@/lib/calc";
-import type { CommonState, SellFill } from "@/lib/types";
+import type { BuyKind, CommonState, SellFill, TradeEvent } from "@/lib/types";
 
 const GREEN = "#007a55";
 const BLUE = "#0077bb";
@@ -16,10 +16,10 @@ function emptyRow(): SellRow {
 
 export default function FillCard({
   common,
-  onApply,
+  onRecord,
 }: {
   common: CommonState;
-  onApply: (patch: Partial<CommonState>) => void;
+  onRecord: (events: TradeEvent[]) => void;
 }) {
   const [mode, setMode] = useState<"normal" | "reverse">(
     common.T > common.split - 1 ? "reverse" : "normal",
@@ -27,8 +27,10 @@ export default function FillCard({
   const [sellRows, setSellRows] = useState<SellRow[]>([emptyRow()]);
   const [buyQty, setBuyQty] = useState("");
   const [buyPrice, setBuyPrice] = useState("");
-  const [tosAvg, setTosAvg] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [tradeDate, setTradeDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [buyKind, setBuyKind] = useState<BuyKind>("normal");
+  const [submissionId, setSubmissionId] = useState(() => crypto.randomUUID());
 
   function updateSellRow(i: number, patch: Partial<SellRow>) {
     setSellRows((rows) => rows.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
@@ -51,8 +53,9 @@ export default function FillCard({
     common.split,
     common,
     sellFills,
-    bq > 0 && bp > 0 ? { qty: bq, price: bp } : null,
+    bq > 0 && bp > 0 ? { qty: bq, price: bp, buyKind } : null,
   );
+  const sellOnlyPreview = applyFills(mode, common.split, common, sellFills, null);
 
   const hasAnyFill = sellFills.length > 0 || (bq > 0 && bp > 0);
 
@@ -65,14 +68,38 @@ export default function FillCard({
   }
 
   function apply() {
-    const tos = parseFloat(tosAvg) || 0;
-    const finalAvg = tos > 0 ? tos : preview.avg;
-    onApply({ T: preview.T, qty: preview.qty, bal: preview.bal, avg: finalAvg });
+    const events: TradeEvent[] = [
+      ...sellFills.map((fill, index) => ({
+        id: `${submissionId}-sell-${index}`,
+        date: tradeDate,
+        sequence: index,
+        side: "sell" as const,
+        qty: fill.qty,
+        price: fill.price,
+        mode,
+        source: "fill" as const,
+      })),
+      ...(bq > 0 && bp > 0
+        ? [{
+            id: `${submissionId}-buy`,
+            date: tradeDate,
+            sequence: sellFills.length,
+            side: "buy" as const,
+            qty: bq,
+            price: bp,
+            mode,
+            buyKind,
+            tDelta: preview.T - sellOnlyPreview.T,
+            source: "fill" as const,
+          }]
+        : []),
+    ];
+    onRecord(events);
     setSellRows([emptyRow()]);
     setBuyQty("");
     setBuyPrice("");
-    setTosAvg("");
     setShowPreview(false);
+    setSubmissionId(crypto.randomUUID());
   }
 
   const rows = [
@@ -97,6 +124,11 @@ export default function FillCard({
       <div className="stitle">
         <div className="dot" style={{ background: GREEN }} />
         어제 체결 입력 → 자동 업데이트
+      </div>
+
+      <div className="field" style={{ marginBottom: "12px" }}>
+        <span className="lbl">체결일</span>
+        <input className="inp" type="date" value={tradeDate} onChange={(e) => setTradeDate(e.target.value)} />
       </div>
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
@@ -200,6 +232,13 @@ export default function FillCard({
           />
         </div>
       </div>
+      <div className="field" style={{ marginBottom: "10px" }}>
+        <span className="lbl">매수 종류</span>
+        <select className="inp" value={buyKind} onChange={(e) => setBuyKind(e.target.value as BuyKind)}>
+          <option value="normal">일반매수 (1주당 T +1)</option>
+          <option value="half">절반매수 (1주당 T +0.5)</option>
+        </select>
+      </div>
 
       <button className="btn btn-green" onClick={togglePreview} disabled={!hasAnyFill}>
         {showPreview ? "🔼 미리보기 닫기" : "🔄 업데이트 미리보기"}
@@ -258,22 +297,9 @@ export default function FillCard({
                 borderTop: "1px solid var(--border)",
               }}
             >
-              <div style={{ fontSize: "10px", color: BLUE, fontWeight: 600, marginBottom: "4px" }}>
-                📱 토스 평단가 입력 (선택)
+              <div style={{ fontSize: "10px", color: BLUE, fontWeight: 600 }}>
+                거래 이벤트로 저장되며 수량·평단·현금·T가 함께 다시 계산됩니다.
               </div>
-              <div style={{ fontSize: "10px", color: "var(--dim)", marginBottom: "6px" }}>
-                토스 앱 평단과 다를 경우 직접 입력
-              </div>
-              <input
-                type="number"
-                className="inp"
-                step={0.01}
-                min={0}
-                placeholder={`자동계산: $${preview.avg.toFixed(2)}`}
-                value={tosAvg}
-                onChange={(e) => setTosAvg(e.target.value)}
-                style={{ borderColor: "rgba(0,119,187,.3)" }}
-              />
             </div>
           </div>
           <button className="btn btn-blue" onClick={apply}>

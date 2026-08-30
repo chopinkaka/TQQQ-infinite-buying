@@ -1,9 +1,14 @@
-import type { CommonState, NormalSettings, ProfitRecord } from "./types";
+import { CYCLE3_EVENTS, replayTradeEvents } from "./replay";
+import type { CommonState, NormalSettings, ProfitRecord, RecoveryBackup, TradeEvent } from "./types";
 
 const STATE_KEY = "muhan_state_v2";
 const PROFIT_KEY = "muhan_profit_v2";
 const CYCLE3_MIGRATION_KEY = "muhan_cycle3_2026_08_18";
 const CYCLE3_HOLDINGS_MIGRATION_KEY = "muhan_cycle3_holdings_2026_08_25";
+const LEDGER_KEY = "muhan_trade_events_v1";
+const ACTUAL_QTY_KEY = "muhan_actual_qty_v1";
+const LEDGER_MIGRATION_KEY = "muhan_cycle3_ledger_2026_08_31";
+const LEDGER_BACKUP_KEY = "muhan_cycle3_backup_2026_08_31";
 
 const HISTORICAL_PROFIT_RECORDS: ProfitRecord[] = [
   {
@@ -119,6 +124,84 @@ export function migrateToCycle3(
   } catch {
     return { state, records };
   }
+}
+
+export function loadTradeEvents(): TradeEvent[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(LEDGER_KEY);
+    return raw ? (JSON.parse(raw) as TradeEvent[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveTradeEvents(events: TradeEvent[]) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(LEDGER_KEY, JSON.stringify(events));
+}
+
+export function loadActualQty(): number {
+  if (typeof window === "undefined") return 27;
+  const value = Number(localStorage.getItem(ACTUAL_QTY_KEY));
+  return Number.isFinite(value) && value >= 0 ? value : 27;
+}
+
+export function saveActualQty(qty: number) {
+  if (typeof window !== "undefined") localStorage.setItem(ACTUAL_QTY_KEY, String(qty));
+}
+
+export function loadRecoveryBackup(): RecoveryBackup | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(LEDGER_BACKUP_KEY);
+    return raw ? (JSON.parse(raw) as RecoveryBackup) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function migrateCycle3Ledger(state: PersistedState): {
+  state: PersistedState;
+  events: TradeEvent[];
+  actualQty: number;
+  backup: RecoveryBackup;
+} {
+  const fallbackBackup = { savedAt: new Date().toISOString(), state: state.common };
+  if (typeof window === "undefined") {
+    return { state, events: [], actualQty: state.common.qty, backup: fallbackBackup };
+  }
+
+  const existingBackup = loadRecoveryBackup();
+  if (localStorage.getItem(LEDGER_MIGRATION_KEY)) {
+    return {
+      state,
+      events: loadTradeEvents(),
+      actualQty: loadActualQty(),
+      backup: existingBackup ?? fallbackBackup,
+    };
+  }
+
+  const backup: RecoveryBackup = existingBackup ?? fallbackBackup;
+  localStorage.setItem(LEDGER_BACKUP_KEY, JSON.stringify(backup));
+  saveTradeEvents(CYCLE3_EVENTS);
+  saveActualQty(27);
+
+  const replayed = replayTradeEvents(8000, 40, CYCLE3_EVENTS);
+  const nextState = {
+    ...state,
+    common: {
+      principal: replayed.principal,
+      split: replayed.split,
+      avg: replayed.avg,
+      qty: replayed.qty,
+      bal: replayed.bal,
+      T: replayed.T,
+    },
+  };
+  saveState(nextState);
+  localStorage.setItem(LEDGER_MIGRATION_KEY, "done");
+  return { state: nextState, events: CYCLE3_EVENTS, actualQty: 27, backup };
 }
 
 /** 2026-08-18~24 실제 매수 체결 5건을 현재 사이클 상태로 한 번만 반영한다. */

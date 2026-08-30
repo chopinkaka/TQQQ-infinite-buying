@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CommonSettingsCard from "@/components/CommonSettingsCard";
+import AccountReconciliationCard from "@/components/AccountReconciliationCard";
 import FillCard from "@/components/FillCard";
 import Tabs, { type TabKey } from "@/components/Tabs";
 import NormalPanel from "@/components/NormalPanel";
@@ -12,13 +13,17 @@ import ProfitPanel from "@/components/ProfitPanel";
 import StrategySettingsCard from "@/components/StrategySettingsCard";
 import {
   loadProfitRecords,
+  loadRecoveryBackup,
   loadState,
-  migrateCycle3Holdings,
+  migrateCycle3Ledger,
   migrateToCycle3,
+  saveActualQty,
   saveProfitRecords,
   saveState,
+  saveTradeEvents,
 } from "@/lib/storage";
-import type { CommonState, NormalSettings, ProfitRecord, ReverseSettings } from "@/lib/types";
+import { mergeTradeEvents, replayTradeEvents } from "@/lib/replay";
+import type { CommonState, NormalSettings, ProfitRecord, RecoveryBackup, ReverseSettings, TradeEvent } from "@/lib/types";
 
 const DEFAULT_COMMON: CommonState = {
   principal: 2000,
@@ -51,6 +56,9 @@ export default function Home() {
   const [hydrated, setHydrated] = useState(false);
   const [quotePrice, setQuotePrice] = useState<number | null>(null);
   const [quoteUpdatedAt, setQuoteUpdatedAt] = useState<number | null>(null);
+  const [tradeEvents, setTradeEvents] = useState<TradeEvent[]>([]);
+  const [actualQty, setActualQty] = useState(27);
+  const [recoveryBackup, setRecoveryBackup] = useState<RecoveryBackup | null>(null);
 
   useEffect(() => {
     const persisted = loadState() ?? {
@@ -65,11 +73,14 @@ export default function Home() {
       loadProfitRecords(),
     );
 
-    const currentState = migrateCycle3Holdings(migrated.state);
+    const ledger = migrateCycle3Ledger(migrated.state);
 
-    setCommon(currentState.common);
-    setNormalSettings(currentState.normalSettings);
+    setCommon(ledger.state.common);
+    setNormalSettings(ledger.state.normalSettings);
     setProfitRecords(migrated.records);
+    setTradeEvents(ledger.events);
+    setActualQty(ledger.actualQty);
+    setRecoveryBackup(ledger.backup ?? loadRecoveryBackup());
     setHydrated(true);
   }, []);
 
@@ -133,6 +144,30 @@ export default function Home() {
     saveProfitRecords(next);
   }
 
+  function applyLedger(events: TradeEvent[]) {
+    const replayed = replayTradeEvents(common.principal, common.split, events);
+    setTradeEvents(events);
+    saveTradeEvents(events);
+    setCommon({
+      principal: replayed.principal,
+      split: replayed.split,
+      avg: replayed.avg,
+      qty: replayed.qty,
+      bal: replayed.bal,
+      T: replayed.T,
+    });
+  }
+
+  function recordEvents(incoming: TradeEvent[]) {
+    applyLedger(mergeTradeEvents(tradeEvents, incoming));
+  }
+
+  function updateActualQty(qty: number) {
+    const safeQty = Number.isFinite(qty) && qty >= 0 ? qty : 0;
+    setActualQty(safeQty);
+    saveActualQty(safeQty);
+  }
+
   const stockValue = quotePrice === null ? null : quotePrice * common.qty;
   const investmentTotal = stockValue === null && common.qty > 0 ? null : common.bal + (stockValue ?? 0);
 
@@ -167,17 +202,21 @@ export default function Home() {
           </div>
         </section>
 
+        {actualQty !== common.qty && (
+          <div className="warnbox account-warning">⚠️ 계좌는 {actualQty}주, 앱 계산은 {common.qty}주입니다. 설정의 계좌 대조에서 확인하세요.</div>
+        )}
+
         <Tabs active={activeTab} onChange={setActiveTab} />
 
         <div style={{ display: activeTab === "N" ? "block" : "none" }}>
           <div className="section-heading"><span>체결 반영</span><small>실제 체결 후 입력</small></div>
-          <FillCard common={common} onApply={patchCommon} />
+          <FillCard common={common} onRecord={recordEvents} />
           <div className="section-heading"><span>오늘 할 일</span><small>일반모드 주문표</small></div>
           <NormalPanel common={common} settings={normalSettings} onSettingsChange={patchNormalSettings} />
         </div>
         <div style={{ display: activeTab === "R" ? "block" : "none" }}>
           <div className="section-heading"><span>체결 반영</span><small>실제 체결 후 입력</small></div>
-          <FillCard common={common} onApply={patchCommon} />
+          <FillCard common={common} onRecord={recordEvents} />
           <div className="section-heading"><span>리버스 관리</span><small>소진 후 대응</small></div>
           <ReversePanel common={common} settings={reverseSettings} onSettingsChange={patchReverseSettings} />
         </div>
@@ -190,6 +229,15 @@ export default function Home() {
             <div className="section-heading"><span>설정</span><small>사이클과 주문표 관리</small></div>
             <CommonSettingsCard common={common} onChange={patchCommon} />
             <StrategySettingsCard settings={normalSettings} onChange={patchNormalSettings} />
+            <AccountReconciliationCard
+              common={common}
+              events={tradeEvents}
+              actualQty={actualQty}
+              backup={recoveryBackup}
+              onActualQtyChange={updateActualQty}
+              onAddEvent={(event) => recordEvents([event])}
+              onReplay={() => applyLedger(tradeEvents)}
+            />
             <OrderTimeCard />
           </>
         )}
