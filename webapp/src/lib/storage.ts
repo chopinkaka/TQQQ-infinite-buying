@@ -9,6 +9,7 @@ const LEDGER_KEY = "muhan_trade_events_v1";
 const ACTUAL_QTY_KEY = "muhan_actual_qty_v1";
 const LEDGER_MIGRATION_KEY = "muhan_cycle3_ledger_2026_08_31";
 const LEDGER_BACKUP_KEY = "muhan_cycle3_backup_2026_08_31";
+const T_REPAIR_BACKUP_KEY = "muhan_cycle3_t27_backup_2026_08_31";
 
 const HISTORICAL_PROFIT_RECORDS: ProfitRecord[] = [
   {
@@ -174,9 +175,26 @@ export function migrateCycle3Ledger(state: PersistedState): {
 
   const existingBackup = loadRecoveryBackup();
   if (localStorage.getItem(LEDGER_MIGRATION_KEY)) {
+    const events = loadTradeEvents();
+    if (!localStorage.getItem(T_REPAIR_BACKUP_KEY)) {
+      localStorage.setItem(T_REPAIR_BACKUP_KEY, JSON.stringify({ savedAt: new Date().toISOString(), state: state.common }));
+    }
+    const replayed = replayTradeEvents(state.common.principal, state.common.split, events);
+    const repairedState: PersistedState = {
+      ...state,
+      common: {
+        principal: replayed.principal,
+        split: replayed.split,
+        avg: replayed.avg,
+        qty: replayed.qty,
+        bal: replayed.bal,
+        T: replayed.T,
+      },
+    };
+    saveState(repairedState);
     return {
-      state,
-      events: loadTradeEvents(),
+      state: repairedState,
+      events,
       actualQty: loadActualQty(),
       backup: existingBackup ?? fallbackBackup,
     };

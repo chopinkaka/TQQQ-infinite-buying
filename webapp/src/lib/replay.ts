@@ -73,11 +73,20 @@ export function replayTradeEvents(
       continue;
     }
 
+    const buyCost = event.qty * event.price;
+    const balanceBeforeBuy = bal;
+    const remainingTurns = split - T;
+    const oneBuyAmount = remainingTurns > 0 ? balanceBeforeBuy / remainingTurns : 0;
     qty += event.qty;
-    totalCost += event.qty * event.price;
-    bal -= event.qty * event.price;
+    totalCost += buyCost;
+    bal -= buyCost;
     if (event.mode === "normal") {
-      T += event.tDelta ?? event.qty * (event.buyKind === "half" ? 0.5 : 1);
+      const calculatedDelta = event.buyKind === "half"
+        ? event.qty * 0.5
+        : oneBuyAmount > 0
+          ? buyCost / oneBuyAmount
+          : 0;
+      T += event.tDelta ?? calculatedDelta;
     } else {
       T += event.tDelta ?? (split - T) * 0.25;
     }
