@@ -144,7 +144,7 @@ export default function Home() {
     saveProfitRecords(next);
   }
 
-  function applyLedger(events: TradeEvent[]) {
+  function applyLedger(events: TradeEvent[], syncActual = false) {
     const replayed = replayTradeEvents(common.principal, common.split, events);
     setTradeEvents(events);
     saveTradeEvents(events);
@@ -156,10 +156,11 @@ export default function Home() {
       bal: replayed.bal,
       T: replayed.T,
     });
+    if (syncActual) updateActualQty(replayed.qty);
   }
 
   function recordEvents(incoming: TradeEvent[]) {
-    applyLedger(mergeTradeEvents(tradeEvents, incoming));
+    applyLedger(mergeTradeEvents(tradeEvents, incoming), true);
   }
 
   function updateActualQty(qty: number) {

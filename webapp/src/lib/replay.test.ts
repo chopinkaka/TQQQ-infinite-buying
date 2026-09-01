@@ -72,3 +72,16 @@ test("복구된 T로 별지점과 다음 주문을 V4.0 공식대로 계산한�
     { price: 70.93, qty: 1, tag: "평단(메인)" },
   ]);
 });
+
+test("추가 체결 2주 × $71.92를 반영하면 계좌 상태가 29주로 이어진다", () => {
+  const events: TradeEvent[] = [
+    ...CYCLE3_EVENTS,
+    { id: "confirmed-latest-fill", date: "2026-08-31", sequence: 9, side: "buy", qty: 2, price: 71.92, mode: "normal", source: "fill" },
+  ];
+  const result = replayTradeEvents(8000, 40, events);
+  assert.equal(result.qty, 29);
+  assert.equal(result.totalCost, 2059);
+  assert.equal(result.avg, 71);
+  assert.equal(result.bal, 5941);
+  assert.equal(result.T, 10.295);
+});
