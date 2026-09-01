@@ -28,7 +28,6 @@ test("C. 같은 날짜와 가격의 별도 체결은 고유 ID별로 모두 합�
     qty: 1,
     price: 70.27,
     mode: "normal",
-    buyKind: "normal",
     source: "fill",
   }));
   assert.equal(replayTradeEvents(8000, 40, events).qty, 4);
@@ -41,18 +40,18 @@ test("D. 같은 이벤트 ID를 반복 병합하고 재생해도 중복 증가�
   assert.equal(replayTradeEvents(8000, 40, twice).qty, 27);
 });
 
-test("E. 일반매수와 절반매수는 T 증가량을 구분한다", () => {
+test("E. 모든 일반모드 매수는 실제 매수금액 기준으로 T를 계산한다", () => {
   const events: TradeEvent[] = [
-    { id: "normal", date: "2026-08-25", sequence: 1, side: "buy", qty: 2, price: 70, mode: "normal", buyKind: "normal", source: "fill" },
-    { id: "half", date: "2026-08-25", sequence: 2, side: "buy", qty: 2, price: 70, mode: "normal", buyKind: "half", source: "fill" },
+    { id: "buy-1", date: "2026-08-25", sequence: 1, side: "buy", qty: 2, price: 70, mode: "normal", source: "fill" },
+    { id: "buy-2", date: "2026-08-25", sequence: 2, side: "buy", qty: 2, price: 70, mode: "normal", source: "fill" },
   ];
-  assert.equal(replayTradeEvents(8000, 40, events).T, 1.7);
+  assert.equal(replayTradeEvents(8000, 40, events).T, 1.4);
 });
 
 test("같은 날에는 입력 순서와 무관하게 매도를 매수보다 먼저 적용한다", () => {
   const events: TradeEvent[] = [
-    { id: "buy", date: "2026-08-26", sequence: 0, side: "buy", qty: 1, price: 80, mode: "normal", buyKind: "normal", source: "fill" },
-    { id: "seed", date: "2026-08-25", sequence: 0, side: "buy", qty: 2, price: 70, mode: "normal", buyKind: "normal", source: "fill" },
+    { id: "buy", date: "2026-08-26", sequence: 0, side: "buy", qty: 1, price: 80, mode: "normal", source: "fill" },
+    { id: "seed", date: "2026-08-25", sequence: 0, side: "buy", qty: 2, price: 70, mode: "normal", source: "fill" },
     { id: "sell", date: "2026-08-26", sequence: 9, side: "sell", qty: 1, price: 75, mode: "normal", source: "fill" },
   ];
   const result = replayTradeEvents(8000, 40, events);

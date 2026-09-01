@@ -18,7 +18,6 @@ export const CYCLE3_EVENTS: TradeEvent[] = [
   qty: Number(qty),
   price: Number(price),
   mode: "normal",
-  buyKind: "normal",
   source: "migration",
 }));
 
@@ -81,11 +80,7 @@ export function replayTradeEvents(
     totalCost += buyCost;
     bal -= buyCost;
     if (event.mode === "normal") {
-      const calculatedDelta = event.buyKind === "half"
-        ? event.qty * 0.5
-        : oneBuyAmount > 0
-          ? buyCost / oneBuyAmount
-          : 0;
+      const calculatedDelta = oneBuyAmount > 0 ? buyCost / oneBuyAmount : 0;
       T += event.tDelta ?? calculatedDelta;
     } else {
       T += event.tDelta ?? (split - T) * 0.25;

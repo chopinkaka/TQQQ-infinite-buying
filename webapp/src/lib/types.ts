@@ -68,10 +68,8 @@ export interface SellFill {
 export interface BuyFill {
   qty: number;
   price: number;
-  buyKind?: BuyKind;
 }
 
-export type BuyKind = "normal" | "half";
 export type TradeSide = "buy" | "sell";
 
 export interface TradeEvent {
@@ -82,7 +80,6 @@ export interface TradeEvent {
   qty: number;
   price: number;
   mode: "normal" | "reverse";
-  buyKind?: BuyKind;
   tDelta?: number;
   source: "migration" | "fill" | "reconciliation";
 }

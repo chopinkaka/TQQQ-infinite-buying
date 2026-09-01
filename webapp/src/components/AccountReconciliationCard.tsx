@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { mergeTradeEvents, replayTradeEvents } from "@/lib/replay";
-import type { BuyKind, CommonState, RecoveryBackup, TradeEvent } from "@/lib/types";
+import type { CommonState, RecoveryBackup, TradeEvent } from "@/lib/types";
 
 export default function AccountReconciliationCard({
   common,
@@ -24,7 +24,6 @@ export default function AccountReconciliationCard({
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [qty, setQty] = useState("");
   const [price, setPrice] = useState("");
-  const [buyKind, setBuyKind] = useState<BuyKind>("normal");
   const [correctionId, setCorrectionId] = useState(() => crypto.randomUUID());
 
   const correctionQty = Number(qty);
@@ -38,7 +37,6 @@ export default function AccountReconciliationCard({
         qty: correctionQty,
         price: correctionPrice,
         mode: "normal",
-        buyKind,
         source: "reconciliation",
       }
     : null;
@@ -91,7 +89,7 @@ export default function AccountReconciliationCard({
             <div key={event.id}>
               <span>{event.date}</span>
               <b>{event.side === "buy" ? "매수" : "매도"} {event.qty}주 × ${event.price.toFixed(2)}</b>
-              <small>{event.buyKind === "half" ? "절반" : "일반"}</small>
+              <small>{event.side === "buy" ? "매수" : "매도"}</small>
             </div>
           ))}
         </div>
@@ -103,7 +101,7 @@ export default function AccountReconciliationCard({
       <div style={{ fontSize: "12px", fontWeight: 700, marginBottom: "10px" }}>누락 매수 보정</div>
       <div className="row">
         <div className="field"><span className="lbl">체결일</span><input className="inp" type="date" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-        <div className="field"><span className="lbl">종류</span><select className="inp" value={buyKind} onChange={(e) => setBuyKind(e.target.value as BuyKind)}><option value="normal">일반매수</option><option value="half">절반매수</option></select></div>
+        <div className="field"><span className="lbl">구분</span><input className="inp" value="TQQQ 매수" readOnly /></div>
       </div>
       <div className="row">
         <div className="field"><span className="lbl">수량</span><input className="inp" type="number" min={1} step={1} value={qty} onChange={(e) => setQty(e.target.value)} /></div>

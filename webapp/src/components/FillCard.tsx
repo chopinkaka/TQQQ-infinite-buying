@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { applyFills, r2 } from "@/lib/calc";
-import type { BuyKind, CommonState, SellFill, TradeEvent } from "@/lib/types";
+import type { CommonState, SellFill, TradeEvent } from "@/lib/types";
 
 const GREEN = "#007a55";
 const BLUE = "#0077bb";
@@ -29,7 +29,6 @@ export default function FillCard({
   const [buyPrice, setBuyPrice] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [tradeDate, setTradeDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [buyKind, setBuyKind] = useState<BuyKind>("normal");
   const [submissionId, setSubmissionId] = useState(() => crypto.randomUUID());
 
   function updateSellRow(i: number, patch: Partial<SellRow>) {
@@ -53,7 +52,7 @@ export default function FillCard({
     common.split,
     common,
     sellFills,
-    bq > 0 && bp > 0 ? { qty: bq, price: bp, buyKind } : null,
+    bq > 0 && bp > 0 ? { qty: bq, price: bp } : null,
   );
   const sellOnlyPreview = applyFills(mode, common.split, common, sellFills, null);
 
@@ -88,7 +87,6 @@ export default function FillCard({
             qty: bq,
             price: bp,
             mode,
-            buyKind,
             tDelta: preview.T - sellOnlyPreview.T,
             source: "fill" as const,
           }]
@@ -231,13 +229,6 @@ export default function FillCard({
             onChange={(e) => setBuyPrice(e.target.value)}
           />
         </div>
-      </div>
-      <div className="field" style={{ marginBottom: "10px" }}>
-        <span className="lbl">매수 종류</span>
-        <select className="inp" value={buyKind} onChange={(e) => setBuyKind(e.target.value as BuyKind)}>
-          <option value="normal">일반매수 (1주당 T +1)</option>
-          <option value="half">절반매수 (1주당 T +0.5)</option>
-        </select>
       </div>
 
       <button className="btn btn-green" onClick={togglePreview} disabled={!hasAnyFill}>
