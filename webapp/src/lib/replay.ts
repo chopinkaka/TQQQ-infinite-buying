@@ -35,24 +35,30 @@ export function mergeTradeEvents(current: TradeEvent[], incoming: TradeEvent[]):
 }
 
 export function replayTradeEvents(
-  principal: number,
+  basePrincipal: number,
   split: CommonState["split"],
   events: TradeEvent[],
 ): ReplayResult {
   const unique = mergeTradeEvents([], events).toSorted((a, b) => {
     const dateOrder = a.date.localeCompare(b.date);
     if (dateOrder !== 0) return dateOrder;
-    if (a.side !== b.side) return a.side === "sell" ? -1 : 1;
+    const sideOrder = { sell: 0, buy: 1, cash: 2 } as const;
+    if (a.side !== b.side) return sideOrder[a.side] - sideOrder[b.side];
     const sequenceOrder = a.sequence - b.sequence;
     return sequenceOrder !== 0 ? sequenceOrder : a.id.localeCompare(b.id);
   });
 
   let qty = 0;
   let totalCost = 0;
-  let bal = principal;
+  let bal = basePrincipal;
   let T = 0;
 
   for (const event of unique) {
+    if (event.side === "cash") {
+      if (Number.isFinite(event.amount)) bal += event.amount;
+      continue;
+    }
+
     if (event.qty <= 0 || event.price <= 0) continue;
 
     if (event.side === "sell") {
@@ -88,7 +94,7 @@ export function replayTradeEvents(
   }
 
   return {
-    principal,
+    principal: basePrincipal,
     split,
     qty,
     totalCost,

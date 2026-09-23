@@ -59,6 +59,8 @@ export default function Home() {
   const [tradeEvents, setTradeEvents] = useState<TradeEvent[]>([]);
   const [actualQty, setActualQty] = useState(27);
   const [recoveryBackup, setRecoveryBackup] = useState<RecoveryBackup | null>(null);
+  const [ledgerBasePrincipal, setLedgerBasePrincipal] = useState(DEFAULT_COMMON.principal);
+  const [cycleNumber, setCycleNumber] = useState(3);
 
   useEffect(() => {
     const persisted = loadState() ?? {
@@ -81,6 +83,8 @@ export default function Home() {
     setTradeEvents(ledger.events);
     setActualQty(ledger.actualQty);
     setRecoveryBackup(ledger.backup ?? loadRecoveryBackup());
+    setLedgerBasePrincipal(ledger.state.ledgerBasePrincipal ?? ledger.state.common.principal);
+    setCycleNumber(ledger.state.cycleNumber ?? 3);
     setHydrated(true);
   }, []);
 
@@ -90,8 +94,8 @@ export default function Home() {
     // 아직 반영되지 않은 구(舊) common(기본값)으로 먼저 실행되어 방금 불러온
     // 저장값을 기본값으로 덮어써버리는 레이스가 생긴다.
     if (!hydrated) return;
-    saveState({ common, normalSettings });
-  }, [common, normalSettings, hydrated]);
+    saveState({ common, normalSettings, ledgerBasePrincipal, cycleNumber });
+  }, [common, normalSettings, ledgerBasePrincipal, cycleNumber, hydrated]);
 
   useEffect(() => {
     let active = true;
@@ -144,8 +148,8 @@ export default function Home() {
     saveProfitRecords(next);
   }
 
-  function applyLedger(events: TradeEvent[], syncActual = false) {
-    const replayed = replayTradeEvents(common.principal, common.split, events);
+  function applyLedger(events: TradeEvent[], syncActual = false, basePrincipal = ledgerBasePrincipal) {
+    const replayed = replayTradeEvents(basePrincipal, common.split, events);
     setTradeEvents(events);
     saveTradeEvents(events);
     setCommon({
@@ -169,6 +173,51 @@ export default function Home() {
     saveActualQty(safeQty);
   }
 
+  function saveFinancials(principal: number, balance: number) {
+    const replayedWithPrincipal = replayTradeEvents(principal, common.split, tradeEvents);
+    const balanceDelta = Math.round((balance - replayedWithPrincipal.bal) * 100) / 100;
+    const nextEvents = Math.abs(balanceDelta) < 0.005
+      ? tradeEvents
+      : mergeTradeEvents(tradeEvents, [{
+          id: `cash-adjustment-${crypto.randomUUID()}`,
+          date: new Date().toISOString().slice(0, 10),
+          sequence: tradeEvents.length,
+          side: "cash",
+          amount: balanceDelta,
+          note: "가용잔금 수동 보정",
+          source: "adjustment",
+        }]);
+    setLedgerBasePrincipal(principal);
+    applyLedger(nextEvents, false, principal);
+  }
+
+  function startNewCycle(principal: number) {
+    const nextCycle = cycleNumber + 1;
+    const nextNormalSettings = { ...normalSettings, previousClose: 0 };
+    const nextCommon: CommonState = {
+      principal,
+      split: common.split,
+      avg: 0,
+      qty: 0,
+      bal: principal,
+      T: 0,
+    };
+    setRecoveryBackup({ savedAt: new Date().toISOString(), state: common });
+    setLedgerBasePrincipal(principal);
+    setCycleNumber(nextCycle);
+    setTradeEvents([]);
+    saveTradeEvents([]);
+    setCommon(nextCommon);
+    setNormalSettings(nextNormalSettings);
+    saveState({
+      common: nextCommon,
+      normalSettings: nextNormalSettings,
+      ledgerBasePrincipal: principal,
+      cycleNumber: nextCycle,
+    });
+    updateActualQty(0);
+  }
+
   const stockValue = quotePrice === null ? null : quotePrice * common.qty;
   const investmentTotal = stockValue === null && common.qty > 0 ? null : common.bal + (stockValue ?? 0);
 
@@ -176,7 +225,7 @@ export default function Home() {
     <>
       <header className="app-header">
         <div>
-          <div className="eyebrow">TQQQ · 3사이클</div>
+          <div className="eyebrow">TQQQ · {cycleNumber}사이클</div>
           <div className="app-title">무한매수</div>
         </div>
         <div className="live-pill"><span />자동 저장 중</div>
@@ -228,7 +277,13 @@ export default function Home() {
         {activeTab === "S" && (
           <>
             <div className="section-heading"><span>설정</span><small>사이클과 주문표 관리</small></div>
-            <CommonSettingsCard common={common} onChange={patchCommon} />
+            <CommonSettingsCard
+              common={common}
+              cycleNumber={cycleNumber}
+              onChange={patchCommon}
+              onSaveFinancials={saveFinancials}
+              onStartNewCycle={startNewCycle}
+            />
             <StrategySettingsCard settings={normalSettings} onChange={patchNormalSettings} />
             <AccountReconciliationCard
               common={common}

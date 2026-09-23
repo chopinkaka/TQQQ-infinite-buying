@@ -7,6 +7,55 @@ import type { ProfitRecord } from "@/lib/types";
 const GREEN = "#007a55";
 const RED = "#cc2244";
 
+function ProfitTrendChart({ records }: { records: ProfitRecord[] }) {
+  const width = 360;
+  const height = 176;
+  const padX = 30;
+  const padTop = 24;
+  const padBottom = 34;
+  let running = 0;
+  const cumulative = records.map((record) => {
+    running = r2(running + record.profit);
+    return running;
+  });
+  const low = Math.min(0, ...cumulative);
+  const high = Math.max(0, ...cumulative);
+  const range = high - low || 1;
+  const chartWidth = width - padX * 2;
+  const chartHeight = height - padTop - padBottom;
+  const x = (index: number) => records.length === 1 ? width / 2 : padX + (chartWidth * index) / (records.length - 1);
+  const y = (value: number) => padTop + ((high - value) / range) * chartHeight;
+  const points = cumulative.map((value, index) => `${x(index)},${y(value)}`).join(" ");
+  const zeroY = y(0);
+
+  return (
+    <div className="card profit-trend-card">
+      <div className="stitle"><div className="dot" style={{ background: GREEN }} />누적 수익 변화</div>
+      <svg className="profit-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`사이클별 누적 수익 변화. 현재 누적 ${cumulative.at(-1) ?? 0}달러`}>
+        <line x1={padX} x2={width - padX} y1={zeroY} y2={zeroY} className="profit-zero-line" />
+        <polyline points={points} className="profit-line" />
+        {cumulative.map((value, index) => (
+          <g key={records[index].id}>
+            <circle cx={x(index)} cy={y(value)} r="5" className={value >= 0 ? "profit-dot-positive" : "profit-dot-negative"} />
+            <text x={x(index)} y={Math.max(14, y(value) - 10)} textAnchor="middle" className="profit-value-label">
+              {value >= 0 ? "+" : ""}${value}
+            </text>
+            <text x={x(index)} y={height - 10} textAnchor="middle" className="profit-cycle-label">{index + 1}회</text>
+          </g>
+        ))}
+      </svg>
+      <div className="cycle-profit-strip">
+        {records.map((record, index) => (
+          <div key={record.id}>
+            <span>{index + 1}사이클</span>
+            <b style={{ color: record.profit >= 0 ? GREEN : RED }}>{record.profit >= 0 ? "+" : ""}${record.profit}</b>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ProfitPanel({
   records,
   onAdd,
@@ -92,6 +141,8 @@ export default function ProfitPanel({
               </div>
             </div>
           </div>
+
+          <ProfitTrendChart records={records} />
 
           <div className="card">
             <div className="stitle">

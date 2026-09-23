@@ -38,6 +38,8 @@ const HISTORICAL_PROFIT_RECORDS: ProfitRecord[] = [
 export interface PersistedState {
   common: CommonState;
   normalSettings: NormalSettings;
+  ledgerBasePrincipal?: number;
+  cycleNumber?: number;
 }
 
 export function loadState(): PersistedState | null {
@@ -180,7 +182,7 @@ export function migrateCycle3Ledger(state: PersistedState): {
     if (!localStorage.getItem(T_REPAIR_BACKUP_KEY)) {
       localStorage.setItem(T_REPAIR_BACKUP_KEY, JSON.stringify({ savedAt: new Date().toISOString(), state: state.common }));
     }
-    const replayed = replayTradeEvents(state.common.principal, state.common.split, events);
+    const replayed = replayTradeEvents(state.ledgerBasePrincipal ?? state.common.principal, state.common.split, events);
     let actualQty = loadActualQty();
     const hasConfirmedUserFill = events.some((event) => event.source === "fill");
     if (!localStorage.getItem(CONFIRMED_FILL_QTY_SYNC_KEY) && hasConfirmedUserFill && actualQty !== replayed.qty) {
@@ -190,6 +192,8 @@ export function migrateCycle3Ledger(state: PersistedState): {
     }
     const repairedState: PersistedState = {
       ...state,
+      ledgerBasePrincipal: state.ledgerBasePrincipal ?? state.common.principal,
+      cycleNumber: state.cycleNumber ?? 3,
       common: {
         principal: replayed.principal,
         split: replayed.split,
@@ -216,6 +220,8 @@ export function migrateCycle3Ledger(state: PersistedState): {
   const replayed = replayTradeEvents(8000, 40, CYCLE3_EVENTS);
   const nextState = {
     ...state,
+    ledgerBasePrincipal: 8000,
+    cycleNumber: 3,
     common: {
       principal: replayed.principal,
       split: replayed.split,

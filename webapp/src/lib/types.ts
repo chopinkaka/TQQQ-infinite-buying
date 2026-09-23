@@ -72,7 +72,7 @@ export interface BuyFill {
 
 export type TradeSide = "buy" | "sell";
 
-export interface TradeEvent {
+export interface ExecutionEvent {
   id: string;
   date: string;
   sequence: number;
@@ -83,6 +83,18 @@ export interface TradeEvent {
   tDelta?: number;
   source: "migration" | "fill" | "reconciliation";
 }
+
+export interface CashAdjustmentEvent {
+  id: string;
+  date: string;
+  sequence: number;
+  side: "cash";
+  amount: number;
+  note: string;
+  source: "adjustment";
+}
+
+export type TradeEvent = ExecutionEvent | CashAdjustmentEvent;
 
 export interface RecoveryBackup {
   savedAt: string;

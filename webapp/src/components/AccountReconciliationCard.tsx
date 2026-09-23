@@ -88,8 +88,17 @@ export default function AccountReconciliationCard({
           {events.toSorted((a, b) => a.date.localeCompare(b.date) || a.sequence - b.sequence).map((event) => (
             <div key={event.id}>
               <span>{event.date}</span>
-              <b>{event.side === "buy" ? "매수" : "매도"} {event.qty}주 × ${event.price.toFixed(2)}</b>
-              <small>{event.side === "buy" ? "매수" : "매도"}</small>
+              {event.side === "cash" ? (
+                <>
+                  <b>현금 {event.amount >= 0 ? "+" : ""}${event.amount.toFixed(2)}</b>
+                  <small>보정</small>
+                </>
+              ) : (
+                <>
+                  <b>{event.side === "buy" ? "매수" : "매도"} {event.qty}주 × ${event.price.toFixed(2)}</b>
+                  <small>{event.side === "buy" ? "매수" : "매도"}</small>
+                </>
+              )}
             </div>
           ))}
         </div>

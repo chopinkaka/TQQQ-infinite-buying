@@ -85,3 +85,32 @@ test("추가 체결 2주 × $71.92를 반영하면 계좌 상태가 29주로 이
   assert.equal(result.bal, 5941);
   assert.equal(result.T, 10.295);
 });
+
+test("가용잔금 보정은 거래내역을 다시 재생해도 한 번만 유지된다", () => {
+  const events: TradeEvent[] = [
+    ...CYCLE3_EVENTS,
+    {
+      id: "cash-adjustment-1",
+      date: "2026-09-23",
+      sequence: 99,
+      side: "cash",
+      amount: 100,
+      note: "가용잔금 수동 보정",
+      source: "adjustment",
+    },
+  ];
+  const once = replayTradeEvents(8000, 40, events);
+  const twice = replayTradeEvents(8000, 40, mergeTradeEvents(events, events));
+  assert.equal(once.bal, 6184.84);
+  assert.equal(twice.bal, 6184.84);
+  assert.equal(once.qty, 27);
+  assert.equal(once.T, 9.5758);
+});
+
+test("새 사이클 기준 원금은 거래가 없을 때 가용잔금과 같다", () => {
+  const result = replayTradeEvents(9000, 40, []);
+  assert.equal(result.principal, 9000);
+  assert.equal(result.bal, 9000);
+  assert.equal(result.qty, 0);
+  assert.equal(result.T, 0);
+});
